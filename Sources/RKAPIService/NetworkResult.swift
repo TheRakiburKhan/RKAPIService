@@ -8,8 +8,8 @@
 import Foundation
 
 public struct NetworkResult<T> {
-    let data: T?
-    let response: HTTPStatusCode
+    public let data: T?
+    public let response: HTTPStatusCode
     
     init(data: T? = nil, response: HTTPStatusCode) {
         self.data = data
