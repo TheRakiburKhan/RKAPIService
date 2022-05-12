@@ -4,7 +4,15 @@
 
 # Requirements
 
-This package can be pulled and used any project from iOS 13 or above.
+This package can be pulled and used any project from iOS or MacOS.
+
+## System Requirments
+
+RKAPIService requires 
+
+- iOS 8.0 or above
+- macOS 10.10 or above
+- XCode 9.0 or above
 
 ## Installations
 

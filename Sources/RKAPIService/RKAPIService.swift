@@ -78,6 +78,48 @@ public class RKAPIService: RKAPIServiceProtocol {
         return NetworkResult(data: rawData, response: status)
     }
     
+    @available(iOS 8.0, *)
+    @available(macOS 10.10, *)
+    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void ){
+        guard let url = urlLink else {
+            
+            completion(.failure(URLError(.badURL)))
+            
+            return
+        }
+        var request = URLRequest(url: url)
+        
+        request.httpMethod = httpMethod.rawValue
+        
+        if let valiedBody = body {
+            request.httpBody = valiedBody
+        }
+        
+        session.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+            }
+            else {
+                
+                guard let response = response as? HTTPURLResponse else {
+                    
+                    completion(.failure(URLError(.cannotParseResponse)))
+                    
+                    return
+                }
+                
+                guard let status = HTTPStatusCode(rawValue: response.statusCode) else {
+                    
+                    completion(.failure(URLError(.badServerResponse)))
+                    
+                    return
+                }
+                
+                completion(.success(NetworkResult(data: data, response: status)))
+            }
+        }
+        
+    }
     
     @available(macOS 10.15.0, *)
     @available(iOS 13.0, *)
