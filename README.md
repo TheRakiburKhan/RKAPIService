@@ -3,7 +3,7 @@
 ![Platforms Support](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS-blue) ![Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-blue) ![Swift Version](https://img.shields.io/badge/Swift-5-blue) ![iOS Version](https://img.shields.io/badge/iOS-8-blue) ![macOS Version](https://img.shields.io/badge/macOS-10.10-blue) ![XCode Version](https://img.shields.io/badge/XCode-9-blue)
 
 
-# Requirements
+## Requirements
 
 This package can be pulled and used any project from iOS or macOS.
 
@@ -32,7 +32,7 @@ it, simply follow the steps:
 Rakibur Khan, contact me via [email](mailto:therakiburkhan@gmail.com) or visit my [website](http://therakiburkhan.me)
 
 
-## LICENSE
+## License
 
 This package is licensed under MIT License. See the [LICENSE](LICENSE.md) file.
 
