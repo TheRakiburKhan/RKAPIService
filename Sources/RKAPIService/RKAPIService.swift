@@ -75,9 +75,7 @@ extension RKAPIService {
             throw URLError(.cannotParseResponse)
         }
         
-        guard let status = HTTPStatusCode(rawValue: response.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
+        let status = HTTPStatusCode(rawValue: response.statusCode)
         
         return NetworkResult(data: rawData, response: status)
     }
@@ -122,9 +120,9 @@ extension RKAPIService {
             throw URLError(.cannotParseResponse)
         }
         
-        guard let status = HTTPStatusCode(rawValue: response.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
+        HTTPURLResponse.localizedString(forStatusCode: response.statusCode)
+        
+        let status = HTTPStatusCode(rawValue: response.statusCode)
         
         return NetworkResult(data: rawData, response: status)
     }
@@ -139,7 +137,6 @@ extension RKAPIService {
      - Parameters:
         - urlLink: Receives an `Optional<URL>`
         - completion: An `@escaping` closure parameter which provides a ``Result<NetworkResult<Data>, Error>`` as return of closure
-     
      */
     public func fetchItems(urlLink: URL?, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void ){
         guard let url = urlLink else {
@@ -163,12 +160,7 @@ extension RKAPIService {
                     return
                 }
                 
-                guard let status = HTTPStatusCode(rawValue: response.statusCode) else {
-                    
-                    completion(.failure(URLError(.badServerResponse)))
-                    
-                    return
-                }
+                let status = HTTPStatusCode(rawValue: response.statusCode)
                 
                 completion(.success(NetworkResult(data: data, response: status)))
             }
@@ -215,12 +207,7 @@ extension RKAPIService {
                     return
                 }
                 
-                guard let status = HTTPStatusCode(rawValue: response.statusCode) else {
-                    
-                    completion(.failure(URLError(.badServerResponse)))
-                    
-                    return
-                }
+                let status = HTTPStatusCode(rawValue: response.statusCode)
                 
                 completion(.success(NetworkResult(data: data, response: status)))
             }

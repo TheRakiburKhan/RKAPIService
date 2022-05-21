@@ -1,4 +1,8 @@
- # Version 2.0.0 (Latest)
+# Version 2.1.0 (Latest)
+- `HTTPStatusCode` will now have a status code for sure.
+- Can handle custom HTTP Response codes. Previously it used to throw a generic error.
+
+### Version 2.0.0
 - Upgraded support from iOS 8 to iOS 9.
 - Added dedicated get request method for iOS 9 and macOS 10.10
 - Updated code documentation. Now developers can utilize the new XCode 13 `Build Documentation` feature.

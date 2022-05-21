@@ -5,11 +5,10 @@
 //  Created by Rakibur Khan on 2/May/22.
 //
 
-import UIKit
+import Foundation
 
 /**
- This structure is used to hold `HTTP` request response and data. It receives a generic optional paramenter for data
- 
+ This structure is used to hold `HTTP` request response and data. It receives a generic optional paramenter for data.
  It receives a generic paramenter *`T`* as type of data which is `Optional` type. It receives ``HTTPStatusCode`` as response.
  */
 @frozen public struct NetworkResult<T> {
@@ -18,7 +17,6 @@ import UIKit
     
     /**
      Initialization
-     
      - Parameters:
         - data: Receives an optional value
         - response: ``HTTPStatusCode`` enum value to send data with that specific method.
