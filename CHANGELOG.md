@@ -1,4 +1,9 @@
-# Version 2.1.0 (Latest)
+# Version 2.2.0 (Latest)
+- Changed `RKAPIService.shared` configuration form `URLSessionConfiguration.default` to `URLSessionConfiguration.default`
+- Changed all URL parsameter to optional form all `fetchItems(url:)` methods
+- Added `URLSessionDataTaskPublisher` form `Combine` support starting form iOS 13.0 and macOS 10.15
+
+### Version 2.1.0
 - `HTTPStatusCode` will now have a status code for sure.
 - Can handle custom HTTP Response codes. Previously it used to throw a generic error.
 
