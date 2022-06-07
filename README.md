@@ -1,4 +1,5 @@
 # RKAPIService
+
 ![Platforms Support](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS-blue) ![Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-blue) ![Swift Version](https://img.shields.io/badge/Swift-5-red) ![iOS Version](https://img.shields.io/badge/iOS-9-blue) ![macOS Version](https://img.shields.io/badge/macOS-10.10-blue) ![XCode Version](https://img.shields.io/badge/XCode-9-blue)
 
 `RKAPIService` uses Combine publishers or Swift's native concurrency *"async/await"*  and performs simple Restful API operations. Apple offers `URLSession` async/await API's only above *iOS 15.0* and *macOS 12.0* but swift concurrency is supported from *iOS 13.0* and *macOS 10.15*. `RKAPIService` let's developer utilize those `URLSession` *async/await* operations down to *iOS 13.0* or *macOS 10.15*
@@ -12,6 +13,7 @@
 - [Usage](#usages)
 - - [For iOS 13.0+ and macOS 10.15+](#for-ios-130-and-macos-1015)
 - - [For iOS 9.0+ and macOS 10.10+](#for-ios-90-and-macos-1010)
+- [Helper](#helper)
 - [Author](#author)
 - [Lisence](#license)
 - [Changelog](#changelog)
@@ -223,6 +225,18 @@ final class DataFetchService {
         }
     }
 }
+```
+## Helper
+When working with network communication, `URL` is the primary component. A simple URLBuilder is included with this package to build `URL` properly and effortlessly.
+- `buildURL(scheme: String, baseURL: String, portNo: Int?, path: String?, queries: [URLQueryItem]?)` returns an `URL?`
+- `buildURL(string: String, filter: CharacterSet)` returns an `URL?`
+
+#### Example
+Here is an exapmple of building simple url of  [Swift Pacakge Manager](https://swift.org/package-manager) page link.
+``` Swift
+RKAPIHelper.buildURL(scheme: "https", baseURL: "swift.org", portNo: nil, path: "/package-manager", queries: nil)
+
+RKAPIHelper.buildURL(string: "https://swift.org/package-manager", filter: .urlQueryAllowed)
 ```
 
 ## Author

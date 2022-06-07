@@ -6,7 +6,7 @@ import Combine
  */
 public class RKAPIService: RKAPIServiceProtocol {
     
-    /// Static instance of `RKAPIService`. It has ``URLSessionConfiguration.ephemeral`` as configuration. ``URLSessionDelegate`` and ``OperationQueue`` are both nil.
+    /// Static instance of `RKAPIService`. It has `URLSessionConfiguration.ephemeral` as configuration. `URLSessionDelegate` and `OperationQueue` are both nil.
     public static var shared = RKAPIService(sessionConfiguration: URLSessionConfiguration.ephemeral, delegate: nil, queue: nil)
     
     private let session: URLSession
@@ -15,15 +15,18 @@ public class RKAPIService: RKAPIServiceProtocol {
      Initializes ``RKAPIService``
      
      - Parameters:
-        - sessionConfiguration: Receives ``URLSessionConfiguration`` from ``Foundation``
-        - delegate: Receives an ``Optional<URLSessionDelegate>`` or ``URLSessionDelegate?`` from ``Foundation``
-        - queue: Receiives an ``Optional<OperationQueue>`` or ``OperationQueue?`` from ``Foundation``
+        - sessionConfiguration: Receives `URLSessionConfiguration` from `Foundation`
+        - delegate: Receives an `Optional<URLSessionDelegate>` or `URLSessionDelegate?` from `Foundation`
+        - queue: Receiives an `Optional<OperationQueue>` or `OperationQueue?` from `Foundation`
      */
     public init(sessionConfiguration: URLSessionConfiguration, delegate: URLSessionDelegate?, queue: OperationQueue?) {
         
         session = URLSession(configuration: sessionConfiguration, delegate: delegate, delegateQueue: queue)
     }
     
+    /**
+     Invalidate current session and cancel it.
+     */
     public func invalidateAndCancelSession() {
         session.invalidateAndCancel()
     }
@@ -54,9 +57,9 @@ extension RKAPIService {
      Fetch items with HTTP Get method without any body parameter. Uses async/await concurrency of iOS 13
      
      - Parameters:
-        - urlLink: Receives an ``Optional<URL>``
+        - urlLink: Receives an `Optional<URL>`
      
-     - Throws: An ``URLError`` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
+     - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
      
      - Returns: Returns a  ``NetworkResult``
      */
@@ -97,7 +100,7 @@ extension RKAPIService {
         - body: Optional raw Data for sending to remote server.
         - jsonData: Accepts a boolean value to determine if HTTP body is in JSON format
      
-     - Throws: An URLError is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
+     - Throws: An `URLError` is thrown if urlLink is nil or not a valied `URL` or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
      
      - Returns: Returns a  ``NetworkResult``
      */
@@ -146,7 +149,7 @@ extension RKAPIService {
      - Parameters:
         - urlLink: Receives an `Optional<URL>`
      
-     - Returns: Returns a  ``AnyPublisher<Success, Failure>`` where `Success` is ``NetworkResult`` `Failure` is ``Error``
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where `Success` is ``NetworkResult`` `Failure` is `Error`
      */
     public func fetchItems(urlLink: URL?) -> AnyPublisher<NetworkResult<Data>, Error> {
         guard let url = urlLink else {
@@ -183,7 +186,7 @@ extension RKAPIService {
         - body: Optional raw Data for sending to remote server.
         - jsonData: Accepts a boolean value to determine if HTTP body is in JSON format
      
-     - Returns: Returns a  ``AnyPublisher<Success, Failure>`` where Success is ``NetworkResult`` Failure is ``Error``
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
      */
     public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?) -> AnyPublisher<NetworkResult<Data>, Error> {
         guard let url = urlLink else {
@@ -225,7 +228,7 @@ extension RKAPIService {
      
      - Parameters:
         - urlLink: Receives an `Optional<URL>`
-        - completion: An `@escaping` closure parameter which provides a ``Result<Success, Failure>`` where `Success` is ``NetworkResult`` and `Failure` is ``Error`` as return of closure
+        - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
      */
     public func fetchItems(urlLink: URL?, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void ){
         guard let url = urlLink else {
@@ -266,7 +269,7 @@ extension RKAPIService {
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
         - body: Optional raw Data for sending to remote server.
         - jsonData: Accepts a boolean value to determine if HTTP body is in JSON format
-        - completion: An `@escaping` closure parameter which provides a ``Result<Success, Failure>`` where `Success` is ``NetworkResult`` and `Failure` is ``Error`` as return of closure
+        - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
      */
     public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void ){
         guard let url = urlLink else {
