@@ -54,10 +54,10 @@ public class RKAPIService: RKAPIServiceProtocol {
 @available(iOS 13.0, *)
 extension RKAPIService {
     /**
-     Fetch items with HTTP Get method without any body parameter. Uses async/await concurrency of iOS 13
+     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
      
      - Parameters:
-        - urlLink: Receives an `Optional<URL>`
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
      
      - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
      
@@ -91,14 +91,39 @@ extension RKAPIService {
     }
     
     /**
+     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
+     
+     Fetch items with HTTP Get method without any body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses async/await concurrency of iOS 13.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+     
+     - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
+     */
+    public func fetchItems<D: Decodable>(urlLink: URL?, _ model: D.Type) async -> Result<NetworkResult<D>, Error> {
+        do {
+            let reply = try await fetchItems(urlLink: urlLink)
+            
+            guard let rawData = reply.data else {throw reply.response}
+            
+            let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+            
+            return .success(NetworkResult(data: decodedData, response: reply.response))
+        } catch {
+            return .failure(error)
+        }
+    }
+    
+    /**
      Fetch items with HTTP method.
      
-     Fetch items with HTTP method with body parameter. Uses asyn/await method of iOS 13
+     Fetch items with HTTP method with body parameter. Uses swift concurrency.
+     
      - Parameters:
-        - urlLink: Receives an optional URL
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
-        - body: Optional raw Data for sending to remote server.
-        - jsonData: Accepts a boolean value to determine if HTTP body is in JSON format
+        - body: `Optional<Data>` aka `Data?` for sending to remote server.
      
      - Throws: An `URLError` is thrown if urlLink is nil or not a valied `URL` or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
      
@@ -135,6 +160,72 @@ extension RKAPIService {
         
         return NetworkResult(data: rawData, response: status)
     }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses swift concurrency.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: `Optional<Data>` aka `Data?` for sending to remote server.
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+     
+     - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
+     */
+    public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, _ model: D.Type) async -> Result<NetworkResult<D>, Error> {
+        do {
+            let reply = try await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: body)
+            
+            guard let rawData = reply.data else {throw reply.response}
+            
+            let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+            
+            return .success(NetworkResult(data: decodedData, response: reply.response))
+        } catch {
+            return .failure(error)
+        }
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses swift concurrency.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: Generic Type `E` where `E` confirms to `Encodable`.
+     
+     - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
+     */
+    public func fetchItemsByHTTPMethod<E: Encodable>(urlLink: URL?, httpMethod: HTTPMethod, body: E) async throws -> NetworkResult<Data> {
+        let uploadData = RKAPIHelper.generateRequestBody(body)
+        let reply = try await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData)
+        
+        return reply
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses swift concurrency.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: Generic Type `E` where `E` confirms to `Encodable`.
+        - model: Generic Type `D` where `D` confirms to `Decodable`.
+     
+     - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
+     */
+    public func fetchItemsByHTTPMethod<D: Decodable, E: Encodable>(urlLink: URL?, httpMethod: HTTPMethod, body: E, _ model: D.Type) async -> Result<NetworkResult<D>, Error> {
+        let uploadData = RKAPIHelper.generateRequestBody(body)
+        let reply = await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, D.self)
+        
+        return reply
+    }
 }
 
 //MARK: With Combine Publisher
@@ -144,10 +235,10 @@ extension RKAPIService {
     /**
      Fetch items with HTTP Get method.
      
-     Fetch items with HTTP Get method without any body parameter. Uses async/await concurrency of iOS 13.
+     Fetch items with HTTP Get method without any body parameter. Uses Combine Publisher.
      
      - Parameters:
-        - urlLink: Receives an `Optional<URL>`
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
      
      - Returns: Returns a  `AnyPublisher<Success, Failure>` where `Success` is ``NetworkResult`` `Failure` is `Error`
      */
@@ -176,15 +267,41 @@ extension RKAPIService {
     }
     
     /**
-     Fetch items with HTTP method.
+     Fetch items with HTTP Get method.
      
-     Fetch items with HTTP method with body parameter. Uses asyn/await method of iOS 13.
+     Fetch items with HTTP Get method without any body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses Combine Publisher.
      
      - Parameters:
-        - urlLink: Receives an optional URL
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where `Success` is ``NetworkResult`` `Failure` is `Error`
+     */
+    public func fetchItems<D: Decodable>(urlLink: URL?, _ model: D.Type) -> AnyPublisher<NetworkResult<D>, Error> {
+        return fetchItems(urlLink: urlLink)
+            .tryMap{ reply in
+                guard let rawData = reply.data else {throw reply.response}
+                
+                let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+                
+                return NetworkResult(data: decodedData, response: reply.response)
+            }
+            .mapError{ error in
+                
+                return error
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. Uses Combine Publisher.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
-        - body: Optional raw Data for sending to remote server.
-        - jsonData: Accepts a boolean value to determine if HTTP body is in JSON format
+        - body: `Optional<Data>` aka `Data?` for sending to remote server.
      
      - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
      */
@@ -216,6 +333,80 @@ extension RKAPIService {
             }
             .eraseToAnyPublisher()
     }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses Combine Publisher.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: `Optional<Data>` aka `Data?` for sending to remote server.
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?,
+                                                     httpMethod: HTTPMethod,
+                                                     body: Data?,
+                                                     _ model: D.Type) -> AnyPublisher<NetworkResult<D>, Error> {
+        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: body)
+            .tryMap{ reply in
+                guard let rawData = reply.data else {throw reply.response}
+                
+                let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+                
+                return NetworkResult(data: decodedData, response: reply.response)
+            }
+            .mapError{ error in
+                
+                return error
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses Combine Publisher.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: Generic Type `E` where `E` confirms to `Encodable`.
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    public func fetchItemsByHTTPMethod<E: Encodable>(urlLink: URL?,
+                                                     httpMethod: HTTPMethod,
+                                                     body: E) -> AnyPublisher<NetworkResult<Data>, Error> {
+        let uploadData = RKAPIHelper.generateRequestBody(body)
+        
+        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData)
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses Combine Publisher.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: Generic Type `E` where `E` confirms to `Encodable`.
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    public func fetchItemsByHTTPMethod<D: Decodable, E: Encodable>(urlLink: URL?,
+                                                                   httpMethod: HTTPMethod,
+                                                                   body: E,
+                                                                   _ model: D.Type) -> AnyPublisher<NetworkResult<D>, Error> {
+        let uploadData = RKAPIHelper.generateRequestBody(body)
+        
+        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, D.self)
+    }
 }
 
 @available(iOS 9.0, *)
@@ -224,15 +415,14 @@ extension RKAPIService {
     /**
      Fetch items with HTTP Get method.
      
-     Fetch items with HTTP Get method without any body parameter. Uses async/await concurrency of iOS 13
+     Fetch items with HTTP Get method without any body parameter.
      
      - Parameters:
-        - urlLink: Receives an `Optional<URL>`
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
         - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
      */
     public func fetchItems(urlLink: URL?, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void ){
         guard let url = urlLink else {
-            
             completion(.failure(URLError(.badURL)))
             
             return
@@ -246,7 +436,6 @@ extension RKAPIService {
             else {
                 
                 guard let response = response as? HTTPURLResponse else {
-                    
                     completion(.failure(URLError(.cannotParseResponse)))
                     
                     return
@@ -260,20 +449,50 @@ extension RKAPIService {
     }
     
     /**
-     Fetch items with HTTP method.
+     Fetch items with HTTP Get method.
      
-     Fetch items with HTTP method with body parameter. Uses asyn/await method of iOS 13.
+     Fetch items with HTTP Get method without any body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data.
      
      - Parameters:
-        - urlLink: Receives an optional URL
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+        - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
+     */
+    public func fetchItems<D: Decodable>(urlLink: URL?,
+                                         _ model: D.Type,
+                                         _ completion: @escaping (Result<NetworkResult<D>, Error>)-> Void ){
+        fetchItems(urlLink: urlLink) { result in
+            switch result {
+                case .success(let reply):
+                    do {
+                        guard let rawData = reply.data else {throw reply.response}
+                        
+                        let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+                        
+                        completion(.success(NetworkResult(data: decodedData, response: reply.response)))
+                    } catch {
+                        completion(.failure(error))
+                    }
+                    
+                case .failure(let error):
+                    completion(.failure(error))
+            }
+        }
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
-        - body: Optional raw Data for sending to remote server.
-        - jsonData: Accepts a boolean value to determine if HTTP body is in JSON format
+        - body: `Optional<Data>` aka `Data?` for sending to remote server.
         - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
      */
     public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void ){
         guard let url = urlLink else {
-            
             completion(.failure(URLError(.badURL)))
             
             return
@@ -293,7 +512,6 @@ extension RKAPIService {
             else {
                 
                 guard let response = response as? HTTPURLResponse else {
-                    
                     completion(.failure(URLError(.cannotParseResponse)))
                     
                     return
@@ -304,6 +522,83 @@ extension RKAPIService {
                 completion(.success(NetworkResult(data: data, response: status)))
             }
         }
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: `Optional<Data>` aka `Data?` for sending to remote server.
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+        - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
+     */
+    public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?,
+                                                     httpMethod: HTTPMethod,
+                                                     body: Data?,
+                                                     _ model: D.Type,
+                                                     _ completion: @escaping (Result<NetworkResult<D>, Error>)-> Void) {
+        fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: body) { result in
+            switch result {
+                case .success(let reply):
+                    do {
+                        guard let rawData = reply.data else {throw reply.response}
+                        
+                        let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+                        
+                        completion(.success(NetworkResult(data: decodedData, response: reply.response)))
+                    } catch {
+                        completion(.failure(error))
+                    }
+                    
+                case .failure(let error):
+                    completion(.failure(error))
+            }
+        }
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: Generic Type `E` where `E` confirms to `Encodable`.
+        - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
+     */
+    public func fetchItemsByHTTPMethod<E: Encodable>(urlLink: URL?,
+                                                     httpMethod: HTTPMethod,
+                                                     body: E,
+                                                     _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void) {
+        let uploadData = RKAPIHelper.generateRequestBody(body)
         
+        fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, completion)
+    }
+    
+    /**
+     Fetch items with HTTP method.
+     
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: Generic Type `E` where `E` confirms to `Encodable`.
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+        - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
+     */
+    public func fetchItemsByHTTPMethod<D: Decodable, E: Encodable>(urlLink: URL?,
+                                                                   httpMethod: HTTPMethod,
+                                                                   body: E,
+                                                                   _ model: D.Type,
+                                                                   _ completion: @escaping (Result<NetworkResult<D>, Error>)-> Void) {
+        let uploadData = RKAPIHelper.generateRequestBody(body)
+        
+        fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, D.self, completion)
     }
 }

@@ -6,8 +6,10 @@
 //
 
 import Foundation
-
-struct RKAPIHelper {
+/**
+ RKAPIHelper provides some useful methods to help process data for network communication.
+ */
+public struct RKAPIHelper {
     /**
      Builds an url from given component
      
@@ -20,7 +22,7 @@ struct RKAPIHelper {
         - path: An `Optional<String>` aka `String?`. Default value is *`Nil`*
         - queries: An array of `Optional<URLQueryItem>` aka `[URLQueryItem]?`. Default value is *`Nil`*
      */
-    static func buildURL(scheme: String = "https", baseURL: String, portNo: Int? = nil, path: String? = nil, queries: [URLQueryItem]? = nil)-> URL? {
+    public static func buildURL(scheme: String = "https", baseURL: String, portNo: Int? = nil, path: String? = nil, queries: [URLQueryItem]? = nil)-> URL? {
         var url: URL? {
             var components = URLComponents()
             components.scheme = scheme
@@ -57,7 +59,19 @@ struct RKAPIHelper {
         - string: An `String`
         - fillter: A `CharacterSet`. Default value is `CharacterSet.urlQueryAllowed`
      */
-    @inlinable static func buildURL(string: String, filter: CharacterSet = .urlQueryAllowed) -> URL? {
+    @inlinable public static func buildURL(string: String, filter: CharacterSet = .urlQueryAllowed) -> URL? {
         return URL(string: string.addingPercentEncoding(withAllowedCharacters: filter) ?? "")
+    }
+    
+    /**
+     Encodes any data to `Data?` for uploding as `URLRequest` body
+     
+     - Parameters:
+        - data: Receives generic type `T` which confirms to `Encodable`
+     
+     - Returns: Returns an `Optional<Data>` aka `Data?`
+     */
+    public static func generateRequestBody<T: Encodable>(_ data: T) -> Data? {
+        return try? JSONEncoder().encode(data)
     }
 }

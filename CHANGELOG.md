@@ -1,4 +1,9 @@
-Version 2.2.1 (Latest)
+Version 2.2.2
+- Updated Quick Help guide for methods
+- Added polymorfic methods for direct data manipulation.
+- `RKAPIHelper` methods not accessible issue solved.
+
+Version 2.2.1
 
 - Added `RKAPIHelper` which has helper functions to build `URL`
 - `buildURL(scheme: String, baseURL: String, portNo: Int?, path: String?, queries: [URLQueryItem]?)` returns an `URL?`
