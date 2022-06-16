@@ -1,3 +1,6 @@
+Version 2.3.0
+- Added `HTTPHeader` if additional headers are required.
+
 Version 2.2.2
 - Updated Quick Help guide for methods
 - Added polymorfic methods for direct data manipulation.

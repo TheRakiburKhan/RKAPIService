@@ -1,6 +1,6 @@
 # RKAPIService
 
-![Platforms Support](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS-blue) ![Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-blue) ![Swift Version](https://img.shields.io/badge/Swift-5-red) ![iOS Version](https://img.shields.io/badge/iOS-9-blue) ![macOS Version](https://img.shields.io/badge/macOS-10.10-blue) ![XCode Version](https://img.shields.io/badge/XCode-9-blue)
+![Platforms Support](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS-blue) ![Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-blue) ![Swift Version](https://img.shields.io/badge/Swift-5-red) ![iOS Version](https://img.shields.io/badge/iOS-9-blue) ![macOS Version](https://img.shields.io/badge/macOS-10.10-blue) ![XCode Version](https://img.shields.io/badge/XCode-13.4-blue)
 
 `RKAPIService` uses Combine publishers or Swift's native concurrency *"async/await"*  and performs simple Restful API operations. Apple offers `URLSession` async/await API's only above *iOS 15.0* and *macOS 12.0* but swift concurrency is supported from *iOS 13.0* and *macOS 10.15*. `RKAPIService` let's developer utilize those `URLSession` *async/await* operations down to *iOS 13.0* or *macOS 10.15*
 
@@ -43,14 +43,14 @@ it, simply follow the steps:
 
 - Create and instance of `RKAPIService`. Developer can also use the *shared* instance by typing `RKAPIService.shared`
 
-- Use `func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?) async throws -> NetworkResult<Data>` for calling any `URLSession.dataTask` operations. This is a *Throwing* method.
+- Use `func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, additionalHeader: [HTTPHeader]?) async throws -> NetworkResult<Data>` for calling any `URLSession.dataTask` operations. This is a *Throwing* method.
 
-- Use `func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?) -> AnyPublisher<NetworkResult<Data>, Error>` for calling any `URLSession.dataTask` operations via `Combine` Publishers. This is non *Throwing* method.
+- Use `func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, additionalHeader: [HTTPHeader]?) -> AnyPublisher<NetworkResult<Data>, Error>` for calling any `URLSession.dataTask` operations via `Combine` Publishers. This is non *Throwing* method.
 
 - If the developer want's to do simple *HTTP GET* request then there is another dedicated API for that,
-`func fetchItems(urlLink: URL?) async throws -> NetworkResult<Data>`. This is a *Throwing* method.
+`func fetchItems(urlLink: URL?, additionalHeader: [HTTPHeader]?) async throws -> NetworkResult<Data>`. This is a *Throwing* method.
 
-If the developer want's to do simple *HTTP GET* request then there is another dedicated API for that, `func fetchItems(urlLink: URL?) -> AnyPublisher<NetworkResult<Data>, Error>`. This is non *Throwing* method.
+If the developer want's to do simple *HTTP GET* request then there is another dedicated API for that, `func fetchItems(urlLink: URL?, additionalHeader: [HTTPHeader]?) -> AnyPublisher<NetworkResult<Data>, Error>`. This is non *Throwing* method.
 
 #### Example with async/await
 
@@ -62,9 +62,9 @@ final class DataFetchService {
     let apiService = RKAPIService.shared
     
     //If you want to use any type of HTTP Request
-    func fetchDataWithBody(url: URL?, method: HTTPMethod, body: Data?) async {
+    func fetchDataWithBody(url: URL?, method: HTTPMethod, body: Data?, additionalHeader: [HTTPHeader]?) async {
         do {
-            let reply = try await apiService.fetchItemsByHTTPMethod(urlLink: url, httpMethod: method, body: body)
+            let reply = try await apiService.fetchItemsByHTTPMethod(urlLink: url, httpMethod: method, body: body, additionalHeader: additionalHeader)
             
             //Handle your data and response code however you like
 
@@ -80,9 +80,9 @@ final class DataFetchService {
     }
 
     // If you want to use HTTP Get Request only
-    func fetchData(url: URL?)async {
+    func fetchData(url: URL?, additionalHeader: [HTTPHeader]?) async {
         do {
-            let reply = try await apiService.fetchItems(urlLink: url)
+            let reply = try await apiService.fetchItems(urlLink: url, additionalHeader: additionalHeader)
             
             //Handle your data and response code however you like
 
@@ -111,8 +111,8 @@ final class DataFetchService {
     let cancellable = Set<AnyCancellable>()
     
     //If you want to use any type of HTTP Request
-    func fetchDataWithBody(url: URL?, method: HTTPMethod, body: Data?) {
-        apiService.fetchItemsByHTTPMethod(urlLink: url, httpMethod: method, body: body)
+    func fetchDataWithBody(url: URL?, method: HTTPMethod, body: Data?, additionalHeader: [HTTPHeader]?) {
+        apiService.fetchItemsByHTTPMethod(urlLink: url, httpMethod: method, body: body, additionalHeader: additionalHeader)
         //Receiving on Main Thread
             .receive(on: DispatchQueue.main)
             .sink { reply in
@@ -137,8 +137,8 @@ final class DataFetchService {
     }
     
     // If you want to use HTTP Get Request only
-    func fetchData(url: URL?)async {
-        apiService.fetchItems(urlLink: url)
+    func fetchData(url: URL?, additionalHeader: [HTTPHeader]?) {
+        apiService.fetchItems(urlLink: url, additionalHeader: additionalHeader)
         //Receiving on Main Thread
             .receive(on: DispatchQueue.main)
             .sink { reply in
@@ -184,8 +184,8 @@ final class DataFetchService {
     let apiService = RKAPIService.shared
     
     //If you want to use any type of HTTP Request
-    func fetchDataWithBody(url: URL?, method: HTTPMethod, body: Data?) {
-        apiService.fetchItemsByHTTPMethod(urlLink: url, httpMethod: method, body: body) { result in
+    func fetchDataWithBody(url: URL?, method: HTTPMethod, body: Data?, additionalHeader: [HTTPHeader]?) {
+        apiService.fetchItemsByHTTPMethod(urlLink: url, httpMethod: method, body: body, additionalHeader: additionalHeader) { result in
             switch result {
                 case .success(let reply):
                     //Handle your data and response code however you like
@@ -205,8 +205,8 @@ final class DataFetchService {
     }
 
     // If you want to use HTTP Get Request only
-    func fetchData(url: URL?) {
-         apiService.fetchItems(urlLink: url) { result in
+    func fetchData(url: URL?, additionalHeader: [HTTPHeader]?) {
+         apiService.fetchItems(urlLink: url, additionalHeader: additionalHeader) { result in
             switch result {
                 case .success(let reply):
                     //Handle your data and response code however you like
