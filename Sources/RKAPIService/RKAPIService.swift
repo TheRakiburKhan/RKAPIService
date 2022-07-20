@@ -31,8 +31,7 @@ public class RKAPIService: RKAPIServiceProtocol {
         session.invalidateAndCancel()
     }
     
-    @available(macOS 10.15.0, *)
-    @available(iOS 13.0, *)
+    @available(iOS 13.0, macOS 10.15.0, *)
     internal func previousVersionURLSession(request: URLRequest) async throws -> (Data, URLResponse) {
         try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
             session.dataTask(with: request) { data, response, error in
@@ -50,8 +49,7 @@ public class RKAPIService: RKAPIServiceProtocol {
 }
 
 //MARK: With async/await
-@available(macOS 10.15.0, *)
-@available(iOS 13.0, *)
+@available(iOS 13.0, macOS 10.15.0, *)
 extension RKAPIService {
     /**
      Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
@@ -248,8 +246,7 @@ extension RKAPIService {
 }
 
 //MARK: With Combine Publisher
-@available(macOS 10.15.0, *)
-@available(iOS 13.0, *)
+@available(iOS 13.0, macOS 10.15.0, *)
 extension RKAPIService {
     /**
      Fetch items with HTTP Get method.
@@ -450,8 +447,8 @@ extension RKAPIService {
     }
 }
 
-@available(iOS 9.0, *)
-@available(macOS 10.10, *)
+@available(iOS, deprecated: 13.0, obsoleted: 15.0, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
+@available(macOS, deprecated: 10.15.0, obsoleted: 12.0, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
 extension RKAPIService {
     /**
      Fetch items with HTTP Get method.
