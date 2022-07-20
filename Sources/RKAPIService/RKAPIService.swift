@@ -447,8 +447,8 @@ extension RKAPIService {
     }
 }
 
-@available(iOS, deprecated: 13.0, obsoleted: 15.0, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
-@available(macOS, deprecated: 10.15.0, obsoleted: 12.0, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
+@available(iOS, deprecated: 13.0, obsoleted: 14.8, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
+@available(macOS, deprecated: 10.15.0, obsoleted: 11.6.7, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
 extension RKAPIService {
     /**
      Fetch items with HTTP Get method.
