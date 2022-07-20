@@ -1,3 +1,7 @@
+Version 2.4.0
+- Fixed `HTTPHeader` init issue.
+- Obsolated completion handler on macOS 12 and iOS 15.
+
 Version 2.3.0
 - Added `HTTPHeader` if additional headers are required.
 
