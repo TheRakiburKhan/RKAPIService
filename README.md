@@ -1,6 +1,14 @@
 # RKAPIService
 
-![Platforms Support](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS-blue) ![Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-blue) ![Swift Version](https://img.shields.io/badge/Swift-5-red) ![iOS Version](https://img.shields.io/badge/iOS-9-blue) ![macOS Version](https://img.shields.io/badge/macOS-10.10-blue) ![XCode Version](https://img.shields.io/badge/XCode-13.4-blue)
+![Platforms Support](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS-blue)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-green)
+![Cocoapod](https://img.shields.io/badge/pod-Incompatible-red)
+![Carthage](https://img.shields.io/badge/carthage-Incompatible-red)
+![Swift Version](https://img.shields.io/badge/Swift-5-red)
+![iOS Version](https://img.shields.io/badge/iOS-9-blue)
+![macOS Version](https://img.shields.io/badge/macOS-10.10-blue)
+![XCode Version](https://img.shields.io/badge/XCode-13.4-blue)
 
 `RKAPIService` uses Combine publishers or Swift's native concurrency *"async/await"*  and performs simple Restful API operations. Apple offers `URLSession` async/await API's only above *iOS 15.0* and *macOS 12.0* but swift concurrency is supported from *iOS 13.0* and *macOS 10.15*. `RKAPIService` let's developer utilize those `URLSession` *async/await* operations down to *iOS 13.0* or *macOS 10.15*
 
@@ -31,9 +39,18 @@ RKAPIService requires
 RKAPIService is available through [Swift Package Manager](https://swift.org/package-manager/). To install
 it, simply follow the steps:
 
-1. In Xcode, select File > Swift Packages > Add Package Dependency.
-1. Follow the prompts using the URL for this repository
-1. Select the `RKAPIService`-prefixed libraries you want to use
+- In Xcode, select File > Swift Packages > Add Package Dependency.
+- Follow the prompts using the URL for this repository
+```
+https://github.com/TheRakiburKhan/RKAPIService.git
+```
+- Select the `RKAPIService` - prefixed libraries you want to use
+
+#### OR
+Add as a package dependency 
+```
+.package(url: "https://github.com/TheRakiburKhan/RKAPIService.git", from: "2.0.0")
+```
 
 ## Usage
 
@@ -245,7 +262,7 @@ Rakibur Khan, contact me via [email](mailto:therakiburkhan@gmail.com) or visit m
 
 ## License
 
-This package is licensed under MIT License. See the [LICENSE](LICENSE.md) file.
+This package is licensed under MIT License. See the [LICENSE](LICENSE) file.
 
 ## Changelog
 

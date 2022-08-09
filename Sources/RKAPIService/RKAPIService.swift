@@ -62,7 +62,7 @@ extension RKAPIService {
      
      - Returns: Returns a  ``NetworkResult``
      */
-    public func fetchItems(urlLink: URL?, additionalHeader: [HTTPHeader]?) async throws -> NetworkResult<Data> {
+    public func fetchItems(urlLink: URL?, additionalHeader: [HTTPHeader]? = nil) async throws -> NetworkResult<Data> {
         guard let url = urlLink else {
             throw URLError(.badURL)
         }
