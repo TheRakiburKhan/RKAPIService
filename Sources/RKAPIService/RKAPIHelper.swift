@@ -74,4 +74,18 @@ public struct RKAPIHelper {
     public static func generateRequestBody<T: Encodable>(_ data: T) -> Data? {
         return try? JSONEncoder().encode(data)
     }
+    
+    /**
+     Encodes any data to `Data?` for uploding as `URLRequest` body
+     
+     - Parameters:
+        - data: Receives dictionary type `[String: Any]`
+     
+     - Returns: Returns an `Optional<Data>` aka `Data?`
+     */
+    public static func generateRequestBody(_  data: [String: Any]?) -> Data? {
+        guard let data = data else {return nil}
+
+        return try? JSONSerialization.data(withJSONObject: data, options: [])
+    }
 }

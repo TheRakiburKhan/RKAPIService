@@ -1,5 +1,6 @@
 # RKAPIService
 
+[![Coding time tracker](https://wakatime.com/badge/github/TheRakiburKhan/RKAPIService.svg)](https://wakatime.com/badge/github/TheRakiburKhan/RKAPIService)
 ![Platforms Support](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS-blue)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-green)
@@ -19,8 +20,8 @@
 - [System Requirments](#system-requirments)
 - [Installations](#installations)
 - [Usage](#usages)
-- - [For iOS 13.0+ and macOS 10.15+](#for-ios-130-and-macos-1015)
-- - [For iOS 9.0+ and macOS 10.10+](#for-ios-90-and-macos-1010)
+    - [For iOS 13.0+ and macOS 10.15+](#for-ios-130-and-macos-1015)
+    - [For iOS 9.0+ and macOS 10.10+](#for-ios-90-and-macos-1010)
 - [Helper](#helper)
 - [Author](#author)
 - [Lisence](#license)
@@ -48,7 +49,7 @@ https://github.com/TheRakiburKhan/RKAPIService.git
 
 #### OR
 Add as a package dependency 
-```
+``` Swift
 .package(url: "https://github.com/TheRakiburKhan/RKAPIService.git", from: "2.0.0")
 ```
 
