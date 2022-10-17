@@ -176,7 +176,7 @@ extension RKAPIService {
      
      - Returns: Returns a  ``NetworkResult``
      */
-    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, additionalHeader: [Header]? = nil) async throws -> NetworkResult<Data> {
+    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil) async throws -> NetworkResult<Data> {
         guard let url = urlLink else {
             throw URLError(.badURL)
         }
@@ -229,7 +229,7 @@ extension RKAPIService {
      
      - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
      */
-    public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, additionalHeader: [Header]? = nil, _ model: D.Type) async -> Result<NetworkResult<D>, Error> {
+    public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil, _ model: D.Type) async -> Result<NetworkResult<D>, Error> {
         do {
             let reply = try await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader)
             
@@ -293,12 +293,12 @@ extension RKAPIService {
      - Parameters:
         - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
-        - body: `Optional<[String: Any]>` aka `[String: Any]?` for sending to remote server.
+        - body: `[String: Any]` aka `[String: Any]` for sending to remote server.
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
      
      - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
      */
-    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: [String: Any]?, additionalHeader: [Header]? = nil) async throws -> NetworkResult<Data> {
+    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: [String: Any], additionalHeader: [Header]? = nil) async throws -> NetworkResult<Data> {
         let uploadData = RKAPIHelper.generateRequestBody(body)
         
         let reply = try await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader)
@@ -314,13 +314,13 @@ extension RKAPIService {
      - Parameters:
         - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
-        - body: `Optional<[String: Any]>` aka `[String: Any]?` for sending to remote server.
+        - body: `[String: Any]` aka `[String: Any]` for sending to remote server.
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
      
      - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
      */
-    public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?, httpMethod: HTTPMethod, body: [String: Any]?, additionalHeader: [Header]? = nil, _ model: D.Type) async -> Result<NetworkResult<D>, Error> {
+    public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?, httpMethod: HTTPMethod, body: [String: Any], additionalHeader: [Header]? = nil, _ model: D.Type) async -> Result<NetworkResult<D>, Error> {
         let uploadData = RKAPIHelper.generateRequestBody(body)
         
         do {
@@ -422,7 +422,7 @@ extension RKAPIService {
      
      - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
      */
-    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data?, additionalHeader: [Header]? = nil) -> AnyPublisher<NetworkResult<Data>, Error> {
+    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil) -> AnyPublisher<NetworkResult<Data>, Error> {
         guard let url = urlLink else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
@@ -474,46 +474,10 @@ extension RKAPIService {
      */
     public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?,
                                                      httpMethod: HTTPMethod,
-                                                     body: Data?,
+                                                     body: Data? = nil,
                                                      additionalHeader: [Header]? = nil,
                                                      _ model: D.Type) -> AnyPublisher<NetworkResult<D>, Error> {
         return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader)
-            .tryMap{ reply in
-                guard let rawData = reply.data else {throw reply.response}
-                
-                let decodedData = try JSONDecoder().decode(model.self, from: rawData)
-                
-                return NetworkResult(data: decodedData, response: reply.response)
-            }
-            .mapError{ error in
-                
-                return error
-            }
-            .eraseToAnyPublisher()
-    }
-    
-    /**
-     Fetch items with HTTP method.
-     
-     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses Combine Publisher.
-     
-     - Parameters:
-        - urlLink: Receives an `Optional<URL>` aka `URL?`
-        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
-        - body: `Optional<Data>` aka `Data?` for sending to remote server.
-        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
-        - model: Generic Type `D` where `D` confirms to `Decodable`
-     
-     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
-     */
-    public func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?,
-                                                     httpMethod: HTTPMethod,
-                                                     body: [String: Any]?,
-                                                     additionalHeader: [Header]? = nil,
-                                                     _ model: D.Type) -> AnyPublisher<NetworkResult<D>, Error> {
-        let uploadData = RKAPIHelper.generateRequestBody(body)
-        
-        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader)
             .tryMap{ reply in
                 guard let rawData = reply.data else {throw reply.response}
                 
@@ -575,6 +539,28 @@ extension RKAPIService {
     }
     
     //MARK: fetchItemsByHTTPMethod [String: Any]
+
+    /**
+     Fetch items with HTTP method.
+
+     Fetch items with HTTP method with body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses Combine Publisher.
+
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: `[String: Any]` aka `[String: Any]` for sending to remote server.
+        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
+
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    public func fetchItemsByHTTPMethod(urlLink: URL?,
+                                       httpMethod: HTTPMethod,
+                                       body: [String: Any],
+                                       additionalHeader: [Header]? = nil) -> AnyPublisher<NetworkResult<Data>, Error> {
+        let uploadData = RKAPIHelper.generateRequestBody(body)
+
+        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader)
+    }
     
     /**
      Fetch items with HTTP method.
@@ -584,7 +570,7 @@ extension RKAPIService {
      - Parameters:
         - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
-        - body: Generic Type `E` where `E` confirms to `Encodable`.
+        - body: `[String: Any]` aka `[String: Any]` for sending to remote server.
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
      
@@ -597,7 +583,19 @@ extension RKAPIService {
                                                      _ model: D.Type) -> AnyPublisher<NetworkResult<D>, Error> {
         let uploadData = RKAPIHelper.generateRequestBody(body)
         
-        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self)
+        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader)
+            .tryMap{ reply in
+                guard let rawData = reply.data else {throw reply.response}
+                
+                let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+                
+                return NetworkResult(data: decodedData, response: reply.response)
+            }
+            .mapError{ error in
+                
+                return error
+            }
+            .eraseToAnyPublisher()
     }
 }
 
