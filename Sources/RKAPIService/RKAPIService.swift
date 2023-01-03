@@ -102,13 +102,16 @@ extension RKAPIService {
      
      - Returns: Returns a  ``NetworkResult``
      */
-    public func fetchItems(urlLink: URL?, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
+    public func fetchItems(urlLink: URL?, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil) async throws -> NetworkResult<Data> {
         guard let url = urlLink else {
             throw URLError(.badURL)
         }
         
         var request = URLRequest(url: url)
-        request.cachePolicy = cachePolicy
+        
+        if let cachePolicy = cachePolicy {
+            request.cachePolicy = cachePolicy
+        }
         
         if let headers = additionalHeader, !headers.isEmpty {
             for header in headers {
@@ -116,24 +119,7 @@ extension RKAPIService {
             }
         }
         
-        var rawData: Data?
-        var rawResponse: URLResponse?
-        
-        if #available(macOS 12.0, *), #available(iOS 15.0, *){
-            (rawData, rawResponse) = try await session.data(for: request)
-        }
-        else {
-            (rawData, rawResponse) = try await previousVersionURLSession(request: request)
-        }
-        
-        guard let response = rawResponse as? HTTPURLResponse else {
-            
-            throw URLError(.cannotParseResponse)
-        }
-        
-        let status = HTTPStatusCode(rawValue: response.statusCode)
-        
-        return NetworkResult(data: rawData, response: status)
+        return try await fetchItems(request: request)
     }
     
     /**
@@ -182,7 +168,7 @@ extension RKAPIService {
      
      - Returns: Returns a  ``NetworkResult``
      */
-    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
+    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil) async throws -> NetworkResult<Data> {
         guard let url = urlLink else {
             throw URLError(.badURL)
         }
@@ -190,7 +176,10 @@ extension RKAPIService {
         var request = URLRequest(url: url)
         
         request.httpMethod = httpMethod.rawValue
-        request.cachePolicy = cachePolicy
+        
+        if let cachePolicy = cachePolicy {
+            request.cachePolicy = cachePolicy
+        }
         
         if let valiedBody = body {
             request.httpBody = valiedBody
@@ -371,6 +360,66 @@ extension RKAPIService {
     }
 }
 
+//MARK: - With URLRequest async/await
+@available(iOS 13.0, macOS 10.15.0, *)
+extension RKAPIService {
+    /**
+     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
+     
+     - Parameters:
+        - request: Receives an `URLRequest`
+     
+     - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
+     
+     - Returns: Returns a  ``NetworkResult``
+     */
+    func fetchItems(request: URLRequest) async throws -> NetworkResult<Data> {
+        var rawData: Data?
+        var rawResponse: URLResponse?
+        
+        if #available(macOS 12.0, *), #available(iOS 15.0, *){
+            (rawData, rawResponse) = try await session.data(for: request)
+        }
+        else {
+            (rawData, rawResponse) = try await previousVersionURLSession(request: request)
+        }
+        
+        guard let response = rawResponse as? HTTPURLResponse else {
+            
+            throw URLError(.cannotParseResponse)
+        }
+        
+        let status = HTTPStatusCode(rawValue: response.statusCode)
+        
+        return NetworkResult(data: rawData, response: status)
+    }
+    
+    /**
+     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
+     
+     - Parameters:
+        - request: Receives an `URLRequest`
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+     
+     - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
+     
+     - Returns: Returns a  ``NetworkResult``
+     */
+    func fetchItems<D: Decodable>(request: URLRequest, _ model: D.Type) async throws -> Result<NetworkResult<D>, Error> {
+        do {
+            let reply = try await fetchItems(request: request)
+            
+            guard let rawData = reply.data else {throw reply.response}
+            
+            let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+            
+            return .success(NetworkResult(data: decodedData, response: reply.response))
+        } catch {
+            return .failure(error)
+        }
+    }
+}
+
 //MARK: - With Combine Publisher
 @available(iOS 13.0, macOS 10.15.0, *)
 extension RKAPIService {
@@ -386,13 +435,16 @@ extension RKAPIService {
      
      - Returns: Returns a  `AnyPublisher<Success, Failure>` where `Success` is ``NetworkResult`` `Failure` is `Error`
      */
-    public func fetchItems(urlLink: URL?, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<Data>, Error> {
+    public func fetchItems(urlLink: URL?, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil) -> AnyPublisher<NetworkResult<Data>, Error> {
         guard let url = urlLink else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
         
         var request = URLRequest(url: url)
-        request.cachePolicy = .useProtocolCachePolicy
+        
+        if let cachePolicy = cachePolicy {
+            request.cachePolicy = cachePolicy
+        }
         
         if let headers = additionalHeader, !headers.isEmpty {
             for header in headers {
@@ -400,21 +452,7 @@ extension RKAPIService {
             }
         }
         
-        return session.dataTaskPublisher(for: request)
-            .mapError{ (error) -> URLError in
-                
-                return error
-            }
-            .tryMap{ output in
-                guard let response = output.response as? HTTPURLResponse else {
-                    throw URLError(.cannotParseResponse)
-                }
-                
-                let status = HTTPStatusCode(rawValue: response.statusCode)
-                
-                return NetworkResult(data: output.data, response: status)
-            }
-            .eraseToAnyPublisher()
+        return fetchItems(request: request)
     }
     
     /**
@@ -460,7 +498,7 @@ extension RKAPIService {
      
      - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
      */
-    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<Data>, Error> {
+    public func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil) -> AnyPublisher<NetworkResult<Data>, Error> {
         guard let url = urlLink else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
@@ -468,7 +506,10 @@ extension RKAPIService {
         var request = URLRequest(url: url)
         
         request.httpMethod = httpMethod.rawValue
-        request.cachePolicy = cachePolicy
+        
+        if let cachePolicy = cachePolicy {
+            request.cachePolicy = cachePolicy
+        }
         
         if let valiedBody = body {
             request.httpBody = valiedBody
@@ -648,6 +689,66 @@ extension RKAPIService {
     }
 }
 
+//MARK: - With URLRequest Combine Publisher
+@available(iOS 13.0, macOS 10.15.0, *)
+extension RKAPIService {
+    /**
+     Fetch items with HTTP Get method.
+     
+     Fetch items with HTTP Get method without any body parameter. Uses Combine Publisher.
+     
+     - Parameters:
+        - request: Receives an `URLRequest`
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where `Success` is ``NetworkResult`` `Failure` is `Error`
+     */
+    func fetchItems(request: URLRequest)-> AnyPublisher<NetworkResult<Data>, Error> {
+        return session.dataTaskPublisher(for: request)
+            .mapError{ (error) -> URLError in
+                
+                return error
+            }
+            .tryMap{ output in
+                guard let response = output.response as? HTTPURLResponse else {
+                    throw URLError(.cannotParseResponse)
+                }
+                
+                let status = HTTPStatusCode(rawValue: response.statusCode)
+                
+                return NetworkResult(data: output.data, response: status)
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    /**
+     Fetch items with HTTP Get method.
+     
+     Fetch items with HTTP Get method without any body parameter. Uses Combine Publisher.
+     
+     - Parameters:
+        - request: Receives an `URLRequest`
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    func fetchItems<D: Decodable>(request: URLRequest, _ model: D.Type) -> AnyPublisher<NetworkResult<D>, Error> {
+        
+        return fetchItems(request: request)
+            .tryMap{ reply in
+                guard let rawData = reply.data else {throw reply.response}
+                
+                let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+                
+                return NetworkResult(data: decodedData, response: reply.response)
+            }
+            .mapError{ error in
+                
+                return error
+            }
+            .eraseToAnyPublisher()
+    }
+}
+
 //MARK: - Completion Handller
 @available(iOS, deprecated: 13.0, obsoleted: 14.8, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
 @available(macOS, deprecated: 10.15.0, obsoleted: 11.6.7, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
@@ -663,7 +764,7 @@ extension RKAPIService {
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is `URLRequest.CachePolicy.useProtocolCachePolicy
         - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
      */
-    public func fetchItems(urlLink: URL?, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void ){
+    public func fetchItems(urlLink: URL?, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void ){
         guard let url = urlLink else {
             completion(.failure(URLError(.badURL)))
             
@@ -671,13 +772,18 @@ extension RKAPIService {
         }
         
         var request = URLRequest(url: url)
-        request.cachePolicy = cachePolicy
+        
+        if let cachePolicy = cachePolicy {
+            request.cachePolicy = cachePolicy
+        }
         
         if let headers = additionalHeader, !headers.isEmpty {
             for header in headers {
                 request.setValue(header.value, forHTTPHeaderField: header.key)
             }
         }
+        
+        fetchItems(request: request, completion)
         
         session.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -876,5 +982,41 @@ extension RKAPIService {
         let uploadData = RKAPIHelper.generateRequestBody(body)
         
         fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, cachePolicy: cachePolicy, completion)
+    }
+}
+
+//MARK: - Completion Handller
+@available(iOS, deprecated: 13.0, obsoleted: 14.8, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
+@available(macOS, deprecated: 10.15.0, obsoleted: 11.6.7, message: "Completion handler may occur memory leak, user async/await or Combine Publisher instead")
+extension RKAPIService {
+    /**
+     Fetch items with HTTP Get method.
+     
+     Fetch items with HTTP Get method without any body parameter.
+     
+     - Parameters:
+        - request: Receives an `URLRequest`
+        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
+        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is `URLRequest.CachePolicy.useProtocolCachePolicy
+        - completion: An `@escaping` closure parameter which provides a `Result<Success, Failure>` where `Success` is ``NetworkResult`` and `Failure` is `Error` as return of closure
+     */
+    func fetchItems(request: URLRequest, _ completion: @escaping (Result<NetworkResult<Data>, Error>)-> Void) {
+        session.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+            }
+            else {
+                
+                guard let response = response as? HTTPURLResponse else {
+                    completion(.failure(URLError(.cannotParseResponse)))
+                    
+                    return
+                }
+                
+                let status = HTTPStatusCode(rawValue: response.statusCode)
+                
+                completion(.success(NetworkResult(data: data, response: status)))
+            }
+        }
     }
 }
