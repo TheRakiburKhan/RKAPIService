@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  NetworkResult.swift
 //  
 //
 //  Created by Rakibur Khan on 2/May/22.
@@ -21,7 +21,7 @@ import Foundation
         - data: Receives an optional value
         - response: ``HTTPStatusCode`` enum value to send data with that specific method.
      */
-    init(data: T? = nil, response: HTTPStatusCode) {
+    public init(data: T? = nil, response: HTTPStatusCode) {
         self.data = data
         self.response = response
     }
