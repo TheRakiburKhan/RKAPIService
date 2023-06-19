@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0](https://github.com/TheRakiburKhan/RKAPIService/releases/tag/3.0.0) - 19 June 2023
+### Added
+- `ContentType` enum added for HTTP ContentType. It can be used in `additionalHeader` parameter of a request.
+- Added support for attachment upload as multipart/formdata as request body
+
+### Fixed
+- Resolved infinite loop problem
+
 ## [2.5.1](https://github.com/TheRakiburKhan/RKAPIService/releases/tag/2.5.1) - 17 October 2022
 ### Fixed
 - Resolved [issue#3 "Shows errors in 2.5.0 when bearer token is provided manually when body us nil"](https://github.com/TheRakiburKhan/RKAPIService/issues/3)

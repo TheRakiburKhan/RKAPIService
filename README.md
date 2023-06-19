@@ -7,11 +7,12 @@
 ![Cocoapod](https://img.shields.io/badge/pod-Incompatible-red)
 ![Carthage](https://img.shields.io/badge/carthage-Incompatible-red)
 ![Swift Version](https://img.shields.io/badge/Swift-5-red)
-![iOS Version](https://img.shields.io/badge/iOS-9-blue)
-![macOS Version](https://img.shields.io/badge/macOS-10.10-blue)
-![XCode Version](https://img.shields.io/badge/XCode-13.4-blue)
+![iOS Version](https://img.shields.io/badge/iOS-11-blue)
+![macOS Version](https://img.shields.io/badge/macOS-10.13-blue)
+![watchOS Version](https://img.shields.io/badge/watchOS-4-blue)
+![tvOS Version](https://img.shields.io/badge/tvOS-11-blue)
 
-`RKAPIService` uses Combine publishers or Swift's native concurrency *"async/await"*  and performs simple Restful API operations. Apple offers `URLSession` async/await API's only above *iOS 15.0* and *macOS 12.0* but swift concurrency is supported from *iOS 13.0* and *macOS 10.15*. `RKAPIService` let's developer utilize those `URLSession` *async/await* operations down to *iOS 13.0* or *macOS 10.15*
+`RKAPIService` uses Combine publishers or Swift's native concurrency *"async/await"*  and performs simple Restful API operations. Apple offers `URLSession` async/await API's only above *iOS 15.0*, *macOS 12.0*, *watchOS 8.0* and *tvOS 15.0* but swift concurrency is supported from *iOS 13.0*, *macOS 10.15*, *watchOS 6.0* and *tvOS 13.0*. `RKAPIService` let's developer utilize those `URLSession` *async/await* operations down to *iOS 13.0*, *macOS 10.15*, *watchOS 6.0* or *tvOS 13.0*
 
 ***N.B: Currently we support `URLSession.dataTask` only. Rest is coming soon.***
 
@@ -20,8 +21,8 @@
 - [System Requirments](#system-requirments)
 - [Installations](#installations)
 - [Usage](#usages)
-    - [For iOS 13.0+ and macOS 10.15+](#for-ios-130-and-macos-1015)
-    - [For iOS 9.0+ and macOS 10.10+](#for-ios-90-and-macos-1010)
+    - [For iOS 13.0+, macOS 10.15+, watchOS 6.0+ or tvOS 13.0+](#for-iOS-1300,macOS-1015,watchOS-6000-or-tvOS-1300)
+    - [For iOS 11.0+ and macOS 10.13+](#for-ios-110-and-macos-1013)
 - [Helper](#helper)
 - [Author](#author)
 - [Lisence](#license)
@@ -31,9 +32,11 @@
 
 RKAPIService requires 
 
-- iOS 9.0 or above
-- macOS 10.10 or above
-- XCode 9.0 or above
+- iOS 11.0 or above
+- macOS 10.13 or above
+- watchOS 4.0 or above
+- tvOS 11.0 or above
+- XCode 12.0 or above
 
 ## Installations
 
@@ -50,12 +53,12 @@ https://github.com/TheRakiburKhan/RKAPIService.git
 #### OR
 Add as a package dependency 
 ``` Swift
-.package(url: "https://github.com/TheRakiburKhan/RKAPIService.git", from: "2.0.0")
+.package(url: "https://github.com/TheRakiburKhan/RKAPIService.git", from: "3.0.0")
 ```
 
 ## Usage
 
-### For iOS 13.0+ and macOS 10.15+
+### For iOS 13.0+, macOS 10.15+, watchOS 6.0+ or tvOS 13.0+
 
 - Import `RKAPIService` 
 
@@ -182,7 +185,7 @@ final class DataFetchService {
 
 ```
 
-### For iOS 9.0+ and macOS 10.10+
+### For iOS 11.0+ and macOS 10.10+
 
 - Import `RKAPIService` 
 

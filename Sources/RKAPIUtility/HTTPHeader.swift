@@ -1,5 +1,4 @@
 //
-//  File.swift
 //  
 //
 //  Created by Rakibur Khan on 16/Jun/22.
@@ -44,6 +43,37 @@ public enum Authorization: Header {
             switch self {
                 case .bearerToken(let token):
                     return "Bearer \(token)"
+            }
+        }
+    }
+}
+
+public enum ContentType: Header {
+    case urlEncoded
+    case rawJSON
+    case formData(boundary: String)
+    case plainText
+    
+    public var key: String {
+        get {
+            return "Content-Type"
+        }
+    }
+    
+    public var value: String {
+        get {
+            switch self {
+                case .urlEncoded:
+                    return "application/x-www-form-urlencoded"
+                    
+                case .rawJSON:
+                    return "application/json"
+                    
+                case .formData(let boundary):
+                    return "multipart/form-data; boundary=\(boundary)"
+                    
+                case .plainText:
+                    return "text/plain; charset=UTF-8"
             }
         }
     }

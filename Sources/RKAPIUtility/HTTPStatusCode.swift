@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  HTTPStatusCode.swift
 //  
 //
 //  Created by Rakibur Khan on 2/May/22.
@@ -15,7 +15,7 @@ public enum HTTPStatusCode: LocalizedError {
     case standard(statusCode: StandardCode)
     case custom(customCode: Int)
     
-    init(rawValue: Int) {
+    public init(rawValue: Int) {
         if let standardStatus = StandardCode(rawValue: rawValue) {
             self = .standard(statusCode: standardStatus)
         }
