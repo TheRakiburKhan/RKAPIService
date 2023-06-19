@@ -88,4 +88,272 @@ public struct RKAPIHelper {
 
         return try? JSONSerialization.data(withJSONObject: data, options: [])
     }
+    
+    @_spi(RKAH) public static func generateBoundary()-> String {
+        "Boundary-\(UUID().uuidString)"
+    }
+    
+    @_spi(RKAH) public static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [Attachment]?, boundary: String) -> Data {
+        let lineBreak = "\r\n"
+        var body = Data()
+        
+        if let data = data {
+            body = data
+        }
+        
+        if let parameters = params {
+            for (key, value) in parameters {
+                body.append("--\(boundary + lineBreak)")
+                body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+                body.append("\(value)" + "\(lineBreak)")
+            }
+        }
+        
+        if let media = media {
+            for photo in media {
+                if photo.filename.isEmpty {
+                    body.append("--\(boundary + lineBreak)")
+                    body.append("Content-Disposition: form-data; name=\"\(photo.key)\"\(lineBreak)")
+                    body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                    body.append(photo.data)
+                    body.append(lineBreak)
+                } else {
+                    body.append("--\(boundary + lineBreak)")
+                    body.append("Content-Disposition: form-data; name=\"\(photo.key)\"; filename=\"\(photo.filename)\"\(lineBreak)")
+                    body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                    body.append(photo.data)
+                    body.append(lineBreak)
+                }
+            }
+        }
+        
+        body.append("--\(boundary)--\(lineBreak)")
+        
+        return body
+    }
+}
+
+@_spi(RKAH) extension Data {
+    mutating func append(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            append(data)
+        }
+    }
+}
+
+@available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
+public extension RKAPIHelper {
+    /**
+     Encodes any data to `Data?` for uploding as `URLRequest` body
+     
+     - Parameters:
+        - data: Receives generic type `T` which confirms to `Encodable`
+     
+     - Returns: Returns an `Optional<Data>` aka `Data?`
+     */
+    static func generateRequestBody<D: Encodable>(_ data: D) async -> Data? {
+        do {
+            let reply = try JSONEncoder().encode(data)
+            
+            return reply
+        } catch {
+            return nil
+        }
+    }
+    
+    /**
+     Encodes any data to `Data?` for uploding as `URLRequest` body
+     
+     - Parameters:
+        - data: Receives dictionary type `[String: Any]`
+     
+     - Returns: Returns an `Optional<Data>` aka `Data?`
+     */
+    static func generateRequestBody(_  data: [String: Any]?) async -> Data? {
+        guard let data = data else {return nil}
+
+        return try? JSONSerialization.data(withJSONObject: data, options: [])
+    }
+    
+    @_spi(RKAH) static func generateBoundary() async -> String {
+        "Boundary-\(UUID().uuidString)"
+    }
+    
+    @_spi(RKAH) static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [Attachment]?, boundary: String) async -> Data {
+        let lineBreak = "\r\n"
+        var body = Data()
+        
+        if let data = data {
+            body = data
+        }
+        
+        if let parameters = params {
+            for (key, value) in parameters {
+                body.append("--\(boundary + lineBreak)")
+                body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+                body.append("\(value)" + "\(lineBreak)")
+            }
+        }
+        
+        if let media = media {
+            for photo in media {
+                if photo.filename.isEmpty {
+                    body.append("--\(boundary + lineBreak)")
+                    body.append("Content-Disposition: form-data; name=\"\(photo.key)\"\(lineBreak)")
+                    body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                    body.append(photo.data)
+                    body.append(lineBreak)
+                } else {
+                    body.append("--\(boundary + lineBreak)")
+                    body.append("Content-Disposition: form-data; name=\"\(photo.key)\"; filename=\"\(photo.filename)\"\(lineBreak)")
+                    body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                    body.append(photo.data)
+                    body.append(lineBreak)
+                }
+            }
+        }
+        
+        body.append("--\(boundary)--\(lineBreak)")
+        
+        return body
+    }
+    
+    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [Attachment]?, boundary: String) async -> Data {
+        let lineBreak = "\r\n"
+        var body = Data()
+        
+        if let data = data {
+            body = data
+        }
+        
+        do {
+            let jsonData = try JSONEncoder().encode(type)
+            
+            let params = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
+            
+            if let parameters = params {
+                for (key, value) in parameters {
+                    body.append("--\(boundary + lineBreak)")
+                    body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+                    body.append("\(value)" + "\(lineBreak)")
+                }
+            }
+            
+            if let media = media {
+                for photo in media {
+                    if photo.filename.isEmpty {
+                        body.append("--\(boundary + lineBreak)")
+                        body.append("Content-Disposition: form-data; name=\"\(photo.key)\"\(lineBreak)")
+                        body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                        body.append(photo.data)
+                        body.append(lineBreak)
+                    } else {
+                        body.append("--\(boundary + lineBreak)")
+                        body.append("Content-Disposition: form-data; name=\"\(photo.key)\"; filename=\"\(photo.filename)\"\(lineBreak)")
+                        body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                        body.append(photo.data)
+                        body.append(lineBreak)
+                    }
+                }
+            }
+            
+            body.append("--\(boundary)--\(lineBreak)")
+            
+            return body
+        } catch {
+            return body
+        }
+    }
+    
+    @_spi(RKAH) static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [AttachmentObj]?, boundary: String) async -> Data {
+        let lineBreak = "\r\n"
+        var body = Data()
+        
+        if let data = data {
+            body = data
+        }
+        
+        if let parameters = params {
+            for (key, value) in parameters {
+                body.append("--\(boundary + lineBreak)")
+                body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+                body.append("\(value)" + "\(lineBreak)")
+            }
+        }
+        
+        if let media = media {
+            for medium in media {
+                let media = await medium.generateAttachmentArray()
+                for photo in media {
+                    if photo.filename.isEmpty {
+                        body.append("--\(boundary + lineBreak)")
+                        body.append("Content-Disposition: form-data; name=\"\(photo.key)\"\(lineBreak)")
+                        body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                        body.append(photo.data)
+                        body.append(lineBreak)
+                    } else {
+                        body.append("--\(boundary + lineBreak)")
+                        body.append("Content-Disposition: form-data; name=\"\(photo.key)\"; filename=\"\(photo.filename)\"\(lineBreak)")
+                        body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                        body.append(photo.data)
+                        body.append(lineBreak)
+                    }
+                }
+            }
+        }
+        
+        body.append("--\(boundary)--\(lineBreak)")
+        
+        return body
+    }
+    
+    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [AttachmentObj]?, boundary: String) async -> Data {
+        let lineBreak = "\r\n"
+        var body = Data()
+        
+        if let data = data {
+            body = data
+        }
+        
+        do {
+            let jsonData = try JSONEncoder().encode(type)
+            
+            let params = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
+            
+            if let parameters = params {
+                for (key, value) in parameters {
+                    body.append("--\(boundary + lineBreak)")
+                    body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+                    body.append("\(value)" + "\(lineBreak)")
+                }
+            }
+            
+            if let media = media {
+                for medium in media {
+                    let media = await medium.generateAttachmentArray()
+                    for photo in media {
+                        if photo.filename.isEmpty {
+                            body.append("--\(boundary + lineBreak)")
+                            body.append("Content-Disposition: form-data; name=\"\(photo.key)\"\(lineBreak)")
+                            body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                            body.append(photo.data)
+                            body.append(lineBreak)
+                        } else {
+                            body.append("--\(boundary + lineBreak)")
+                            body.append("Content-Disposition: form-data; name=\"\(photo.key)\"; filename=\"\(photo.filename)\"\(lineBreak)")
+                            body.append("Content-Type: \(photo.mimeType + lineBreak + lineBreak)")
+                            body.append(photo.data)
+                            body.append(lineBreak)
+                        }
+                    }
+                }
+            }
+            
+            body.append("--\(boundary)--\(lineBreak)")
+            
+            return body
+        } catch {
+            return body
+        }
+    }
 }
