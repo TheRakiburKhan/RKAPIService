@@ -93,7 +93,7 @@ public struct RKAPIHelper {
         "Boundary-\(UUID().uuidString)"
     }
     
-    @_spi(RKAH) public static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [Attachment]?, boundary: String) -> Data {
+    @_spi(RKAH) public static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [UploadAttachment]?, boundary: String) -> Data {
         let lineBreak = "\r\n"
         var body = Data()
         
@@ -179,7 +179,7 @@ public extension RKAPIHelper {
         "Boundary-\(UUID().uuidString)"
     }
     
-    @_spi(RKAH) static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [Attachment]?, boundary: String) async -> Data {
+    @_spi(RKAH) static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [UploadAttachment]?, boundary: String) async -> Data {
         let lineBreak = "\r\n"
         var body = Data()
         
@@ -218,7 +218,7 @@ public extension RKAPIHelper {
         return body
     }
     
-    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [Attachment]?, boundary: String) async -> Data {
+    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [UploadAttachment]?, boundary: String) async -> Data {
         let lineBreak = "\r\n"
         var body = Data()
         
@@ -265,7 +265,7 @@ public extension RKAPIHelper {
         }
     }
     
-    @_spi(RKAH) static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [AttachmentObj]?, boundary: String) async -> Data {
+    @_spi(RKAH) static func createDataBody(data: Data? = nil, withParameters params: [String: Any]?, media: [Attachment]?, boundary: String) async -> Data {
         let lineBreak = "\r\n"
         var body = Data()
         
@@ -307,7 +307,7 @@ public extension RKAPIHelper {
         return body
     }
     
-    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [AttachmentObj]?, boundary: String) async -> Data {
+    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [Attachment]?, boundary: String) async -> Data {
         let lineBreak = "\r\n"
         var body = Data()
         

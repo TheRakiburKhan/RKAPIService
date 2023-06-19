@@ -1,115 +1,57 @@
 //
 //  
 //
-//  Created by Rakibur Khan on 17/6/23.
+//  Created by Rakibur Khan on 19/6/23.
 //
 
 import Foundation
 
-@_spi(RKAH) public struct Attachment {
-    let key: String
-    let filename: String
-    let data: Data
-    let mimeType: String
+public struct Attachment {
+    public let key: String
+    public let fileArray: [AttachedFile]
+    public let fileItem: AttachedFile?
     
-    public init?(data: Data?, forKey key: String, fileName: String, type mimeType: String) {
+    public init?(file: AttachedFile?, forKey key: String) {
         self.key = key
-        self.mimeType = mimeType
-        self.filename = fileName
-        guard let data = data else { return nil }
-        self.data = data
+        guard let file = file else {return nil}
+        self.fileItem = file
+        self.fileArray = []
     }
     
-    public init?(data: Data?, forKey key: String, json: Bool) {
+    public init?(files: [AttachedFile], forKey key: String) {
         self.key = key
-        self.mimeType = json ? ContentType.urlEncoded.value : ""
-        self.filename = ""
-        guard let data = data else { return nil }
-        self.data = data
+        self.fileItem = nil
+        guard !files.isEmpty else {return nil}
+        self.fileArray = files
     }
 }
 
 #if canImport(UIKit)
 import UIKit
 
-#if canImport(UniformTypeIdentifiers)
-import UniformTypeIdentifiers
-#endif
-
-@_spi(RKAH)
+@available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
 extension Attachment {
-    @available (iOS 14.0, *)
-    public init?(withImage image: UIImage?, forKey key: String, fileName: String, type: UTType = .png) {
-        self.key = key
-        self.mimeType = type.preferredMIMEType ?? ""
-        self.filename = fileName+".\(type.preferredFilenameExtension ?? "")"
-        
-        switch type {
-            case .jpeg:
-                guard let data = image?.jpegData(compressionQuality: 0.8) else { return nil }
-                self.data = data
-                
-            case .png:
-                guard let data = image?.pngData() else { return nil }
-                self.data = data
-                
-            default:
-                return nil
+    func generateAttachmentArray() async -> [UploadAttachment] {
+        var attachmets: [UploadAttachment] = []
+        if let fileItem = fileItem {
+            if let attachmet = await generateAttachment(item: fileItem, key: key) {
+                attachmets.append(attachmet)
+            }
+        } else {
+            guard !fileArray.isEmpty else {return attachmets}
+            
+            for (index, fileItem) in fileArray.enumerated() {
+                if let attachmet = await generateAttachment(item: fileItem, key: "\(key)[\(index)]") {
+                    attachmets.append(attachmet)
+                }
+            }
         }
+        
+        return attachmets
     }
     
-    public init?(withImage image: UIImage?, forKey key: String, fileName: String, mimeType: String) {
-        self.key = key
-        self.mimeType = mimeType
-        self.filename = fileName
-        guard let data = image?.pngData() else { return nil }
-        self.data = data
-    }
-}
-#endif
-
-#if canImport(AppKit)
-import AppKit
-
-#if canImport(UniformTypeIdentifiers)
-import UniformTypeIdentifiers
-#endif
-
-extension Attachment {
-    @available(macOS 11.0, *)
-    public init?(withImage image: NSImage?, forKey key: String, fileName: String, type: UTType = .png) {
-        self.key = key
-        self.mimeType = type.preferredMIMEType ?? ""
-        self.filename = fileName+".\(type.preferredFilenameExtension ?? "")"
-        
-        guard let cgImage = image?.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-        
-        switch type {
-            case .jpeg:
-                
-                let imageRep = NSBitmapImageRep(cgImage: cgImage)
-                guard let jpegData = imageRep.representation(using: .jpeg, properties: [:]) else { return nil }
-                self.data = jpegData
-                
-            case .png:
-                let imageRep = NSBitmapImageRep(cgImage: cgImage)
-                guard let jpegData = imageRep.representation(using: .png, properties: [:]) else { return nil }
-                self.data = jpegData
-                
-            default:
-                return nil
-        }
-    }
-    
-    public init?(withImage image: NSImage?, forKey key: String, fileName: String, mimeType: String) {
-        self.key = key
-        self.mimeType = mimeType
-        self.filename = fileName
-        
-        guard let cgImage = image?.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-        let imageRep = NSBitmapImageRep(cgImage: cgImage)
-        guard let jpegData = imageRep.representation(using: .png, properties: [:]) else { return nil }
-        self.data = jpegData
+    func generateAttachment(item: AttachedFile, key: String) async -> UploadAttachment? {
+        .init(data: item.file, forKey: key, fileName: item.fileName, type: item.mimeType)
     }
 }
 #endif

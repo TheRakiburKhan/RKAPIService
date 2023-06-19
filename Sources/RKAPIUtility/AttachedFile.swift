@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct AttachmentFileModel {
+public struct AttachedFile {
     public let file: Data?
     
     public let fileName: String
@@ -28,7 +28,7 @@ import UIKit
 import UniformTypeIdentifiers
 #endif
 
-public extension AttachmentFileModel {
+public extension AttachedFile {
     @available (iOS 14.0, *)
      init?(withImage image: UIImage?, fileName: String, type: UTType = .png) {
         self.mimeType = type.preferredMIMEType ?? ""
@@ -64,7 +64,7 @@ import AppKit
 import UniformTypeIdentifiers
 #endif
 
-public extension AttachmentFileModel {
+public extension AttachedFile {
     @available(macOS 11.0, *)
     init?(withImage image: NSImage?, fileName: String, type: UTType = .png) {
         self.mimeType = type.preferredMIMEType ?? ""
