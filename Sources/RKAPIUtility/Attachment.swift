@@ -29,6 +29,31 @@ public struct Attachment {
 #if canImport(UIKit)
 import UIKit
 
+extension Attachment {
+    func generateAttachmentArray() -> [UploadAttachment] {
+        var attachmets: [UploadAttachment] = []
+        if let fileItem = fileItem {
+            if let attachmet = generateAttachment(item: fileItem, key: key) {
+                attachmets.append(attachmet)
+            }
+        } else {
+            guard !fileArray.isEmpty else {return attachmets}
+            
+            for (index, fileItem) in fileArray.enumerated() {
+                if let attachmet = generateAttachment(item: fileItem, key: "\(key)[\(index)]") {
+                    attachmets.append(attachmet)
+                }
+            }
+        }
+        
+        return attachmets
+    }
+    
+    func generateAttachment(item: AttachedFile, key: String) -> UploadAttachment? {
+        .init(data: item.file, forKey: key, fileName: item.fileName, type: item.mimeType)
+    }
+}
+
 @available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
 extension Attachment {
     func generateAttachmentArray() async -> [UploadAttachment] {

@@ -149,7 +149,9 @@ public extension RKAPIService {
      
      - Returns: Returns a  ``NetworkResult``
      */
-    func fetchItems(urlLink: URL?, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil) async throws -> NetworkResult<Data> {
+    func fetchItems(urlLink: URL?,
+                    additionalHeader: [Header]? = nil,
+                    cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
         try await fetchItemsBase(urlLink: urlLink, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
     }
     
@@ -168,7 +170,8 @@ public extension RKAPIService {
      */
     func fetchItems<D: Decodable>(urlLink: URL?,
                                   additionalHeader: [Header]? = nil,
-                                  _ model: D.Type, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
+                                  _ model: D.Type,
+                                  cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
         do {
             let reply = try await fetchItemsBase(urlLink: urlLink, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
             
@@ -227,7 +230,11 @@ public extension RKAPIService {
      
      - Returns: Returns a  ``NetworkResult``
      */
-    func fetchItemsByHTTPMethod(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil) async throws -> NetworkResult<Data> {
+    func fetchItemsByHTTPMethod(urlLink: URL?,
+                                httpMethod: HTTPMethod,
+                                body: Data? = nil,
+                                additionalHeader: [Header]? = nil,
+                                cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
         
         return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader)
     }
@@ -254,9 +261,7 @@ public extension RKAPIService {
                                               additionalHeader: [Header]? = nil,
                                               cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
-        let reply = try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
-        
-        return reply
+        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
     }
     
     /**
@@ -315,9 +320,7 @@ public extension RKAPIService {
                                                             _ model: D.Type,
                                                             cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
-        let reply = await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, cachePolicy: cachePolicy)
-        
-        return reply
+        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, cachePolicy: cachePolicy)
     }
     
     //MARK: fetchItemsByHTTPMethod [String: Any]
@@ -344,9 +347,7 @@ public extension RKAPIService {
                                 cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
         
-        let reply = try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
-        
-        return reply
+        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
     }
     
     /**
@@ -414,7 +415,6 @@ public extension RKAPIService {
         activeHeader.append(ContentType.formData(boundary: boundary))
         
         return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: [ContentType.formData(boundary: boundary)], cachePolicy: cachePolicy)
-        
     }
     
     /**
@@ -453,7 +453,6 @@ public extension RKAPIService {
         activeHeader.append(ContentType.formData(boundary: boundary))
         
         return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, cachePolicy: cachePolicy)
-        
     }
     
     /**
@@ -478,7 +477,7 @@ public extension RKAPIService {
                                               body: E,
                                               multipartAttachment: [Attachment],
                                               additionalHeader: [Header]? = nil,
-                                              cachePolicy: URLRequest.CachePolicy? = nil) async throws -> NetworkResult<Data>{
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data>{
         let boundary = await RKAPIHelper.generateBoundary()
         
         let data = await RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)

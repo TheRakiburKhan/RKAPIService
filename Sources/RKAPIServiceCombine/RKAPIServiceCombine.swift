@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import RKAPIUtility
+@_spi(RKAH) import RKAPIUtility
 
 #if canImport(Combine)
 import Combine
@@ -396,6 +396,159 @@ public extension RKAPIServiceCombine {
         let uploadData = RKAPIHelper.generateRequestBody(body)
         
         return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, cachePolicy: cachePolicy)
+    }
+}
+
+//MARK: - All Requests with attachment
+@available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
+public extension RKAPIServiceCombine {
+    /**
+     Fetch items with HTTP method using multipart/formdata.
+     
+     Fetch items with HTTP method with body and multipart/formdata parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses swift concurrency.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: `[String: Any]` aka `[String: Any]` for sending to remote server.
+        - multipartAttachment: Receives an array``[Attachment]``
+        - additionalHeader: Receives an `Optional<Array<Header>>` aka ``[Header]``?
+        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    func fetchItemsByHTTPMethod(urlLink: URL?,
+                                httpMethod: HTTPMethod,
+                                body: [String: Any]? = nil,
+                                multipartAttachment: [Attachment],
+                                additionalHeader: [Header]? = nil,
+                                cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<Data>, Error> {
+        let boundary = RKAPIHelper.generateBoundary()
+        
+        let data = RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
+        
+        var activeHeader: [Header] = []
+        
+        if let additionalHeader = additionalHeader {
+            activeHeader = additionalHeader
+        }
+        
+        activeHeader.append(ContentType.formData(boundary: boundary))
+        
+        return fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: [ContentType.formData(boundary: boundary)], cachePolicy: cachePolicy)
+    }
+    
+    /**
+     Fetch items with HTTP method using multipart/formdata.
+     
+     Fetch items with HTTP method with body and multipart/formdata parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses swift concurrency.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: `[String: Any]` aka `[String: Any]` for sending to remote server.
+        - multipartAttachment: Receives an array``[Attachment]``
+        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    func fetchItemsByHTTPMethod<D: Decodable>(urlLink: URL?,
+                                              httpMethod: HTTPMethod,
+                                              body: [String: Any]? = nil,
+                                              multipartAttachment: [Attachment],
+                                              additionalHeader: [Header]? = nil,
+                                              _ model: D.Type,
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<D>, Error> {
+        let boundary = RKAPIHelper.generateBoundary()
+        
+        let data = RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
+        
+        var activeHeader: [Header] = []
+        
+        if let additionalHeader = additionalHeader {
+            activeHeader = additionalHeader
+        }
+        
+        activeHeader.append(ContentType.formData(boundary: boundary))
+        
+        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, cachePolicy: cachePolicy)
+    }
+    
+    /**
+     Fetch items with HTTP method using multipart/formdata.
+     
+     Fetch items with HTTP method with body and multipart/formdata parameter. Uses swift concurrency.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: `Optional<Data>` aka `Data?` for sending to remote server.
+        - multipartAttachment: Receives an array``[Attachment]``
+        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
+        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    func fetchItemsByHTTPMethod<E: Encodable>(urlLink: URL?,
+                                              httpMethod: HTTPMethod,
+                                              body: E,
+                                              multipartAttachment: [Attachment],
+                                              additionalHeader: [Header]? = nil,
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<Data>, Error> {
+        let boundary = RKAPIHelper.generateBoundary()
+        
+        let data = RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
+        
+        var activeHeader: [Header] = []
+        
+        if let additionalHeader = additionalHeader {
+            activeHeader = additionalHeader
+        }
+        
+        activeHeader.append(ContentType.formData(boundary: boundary))
+        
+        return fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, cachePolicy: cachePolicy)
+        
+    }
+    
+    /**
+     Fetch items with HTTP method using multipart/formdata.
+     
+     Fetch items with HTTP method with body and multipart/formdata parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses swift concurrency.
+     
+     - Parameters:
+        - urlLink: Receives an `Optional<URL>` aka `URL?`
+        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
+        - body: `Optional<Data>` aka `Data?` for sending to remote server.
+        - multipartAttachment: Receives an array``[Attachment]``
+        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
+        - model: Generic Type `D` where `D` confirms to `Decodable`
+        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
+     
+     - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
+     */
+    func fetchItemsByHTTPMethod<D: Decodable, E: Encodable>(urlLink: URL?,
+                                                            httpMethod: HTTPMethod,
+                                                            body: E,
+                                                            multipartAttachment: [Attachment],
+                                                            additionalHeader: [Header]? = nil,
+                                                            _ model: D.Type,
+                                                            cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<D>, Error> {
+        let boundary = RKAPIHelper.generateBoundary()
+        
+        let data = RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
+        
+        var activeHeader: [Header] = []
+        
+        if let additionalHeader = additionalHeader {
+            activeHeader = additionalHeader
+        }
+        
+        activeHeader.append(ContentType.formData(boundary: boundary))
+        
+        return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, cachePolicy: cachePolicy)
     }
 }
 #endif
