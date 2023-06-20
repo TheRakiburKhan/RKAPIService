@@ -29,7 +29,7 @@ import UniformTypeIdentifiers
 #endif
 
 public extension AttachedFile {
-    @available (iOS 14.0, *)
+    @available(iOS 14.0, watchOS 7.0, tvOS 14.0, *)
      init?(withImage image: UIImage?, fileName: String, type: UTType = .png) {
         self.mimeType = type.preferredMIMEType ?? ""
         self.fileName = fileName+".\(type.preferredFilenameExtension ?? "")"
@@ -74,7 +74,6 @@ public extension AttachedFile {
         
         switch type {
             case .jpeg:
-                
                 let imageRep = NSBitmapImageRep(cgImage: cgImage)
                 guard let jpegData = imageRep.representation(using: .jpeg, properties: [:]) else { return nil }
                 self.file = jpegData
