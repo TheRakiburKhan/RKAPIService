@@ -189,9 +189,17 @@ public struct RKAPIHelper {
             
             if let parameters = params {
                 for (key, value) in parameters {
-                    body.append("--\(boundary + lineBreak)")
-                    body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
-                    body.append("\(value)" + "\(lineBreak)")
+                    if let array = value as? Array<Any> {
+                        for (index, value) in array.enumerated() {
+                            body.append("--\(boundary + lineBreak)")
+                            body.append("Content-Disposition: form-data; name=\"\(key)[\(index)]\"\(lineBreak + lineBreak)")
+                            body.append("\(value)" + "\(lineBreak)")
+                        }
+                    } else {
+                        body.append("--\(boundary + lineBreak)")
+                        body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+                        body.append("\(value)" + "\(lineBreak)")
+                    }
                 }
             }
             
@@ -325,9 +333,17 @@ public extension RKAPIHelper {
             
             if let parameters = params {
                 for (key, value) in parameters {
-                    body.append("--\(boundary + lineBreak)")
-                    body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
-                    body.append("\(value)" + "\(lineBreak)")
+                    if let array = value as? Array<Any> {
+                        for (index, value) in array.enumerated() {
+                            body.append("--\(boundary + lineBreak)")
+                            body.append("Content-Disposition: form-data; name=\"\(key)[\(index)]\"\(lineBreak + lineBreak)")
+                            body.append("\(value)" + "\(lineBreak)")
+                        }
+                    } else {
+                        body.append("--\(boundary + lineBreak)")
+                        body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+                        body.append("\(value)" + "\(lineBreak)")
+                    }
                 }
             }
             
@@ -414,9 +430,17 @@ public extension RKAPIHelper {
             
             if let parameters = params {
                 for (key, value) in parameters {
-                    body.append("--\(boundary + lineBreak)")
-                    body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
-                    body.append("\(value)" + "\(lineBreak)")
+                    if let array = value as? Array<Any> {
+                        for (index, value) in array.enumerated() {
+                            body.append("--\(boundary + lineBreak)")
+                            body.append("Content-Disposition: form-data; name=\"\(key)[\(index)]\"\(lineBreak + lineBreak)")
+                            body.append("\(value)" + "\(lineBreak)")
+                        }
+                    } else {
+                        body.append("--\(boundary + lineBreak)")
+                        body.append("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+                        body.append("\(value)" + "\(lineBreak)")
+                    }
                 }
             }
             
