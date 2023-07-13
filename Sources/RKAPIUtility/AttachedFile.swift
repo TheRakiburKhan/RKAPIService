@@ -30,14 +30,19 @@ import UniformTypeIdentifiers
 
 public extension AttachedFile {
     @available(iOS 14.0, watchOS 7.0, tvOS 14.0, *)
-     init?(withImage image: UIImage?, fileName: String, type: UTType = .png) {
+    init?(withImage image: UIImage?, compress: Double = 0.8, fileName: String, type: UTType = .png) {
         self.mimeType = type.preferredMIMEType ?? ""
         self.fileName = fileName+".\(type.preferredFilenameExtension ?? "")"
         
         switch type {
             case .jpeg:
-                guard let data = image?.jpegData(compressionQuality: 0.8) else { return nil }
-                self.file = data
+                if compress <= 1.0 {
+                    guard let data = image?.jpegData(compressionQuality: compress) else { return nil }
+                    self.file = data
+                } else {
+                    guard let data = image?.jpegData(compressionQuality: 0.8) else { return nil }
+                    self.file = data
+                }
                 
             case .png:
                 guard let data = image?.pngData() else { return nil }
@@ -46,6 +51,14 @@ public extension AttachedFile {
             default:
                 return nil
         }
+    }
+    
+    @available(iOS 14.0, watchOS 7.0, tvOS 14.0, *)
+    init?(withData data: Data?, fileName: String, type: UTType) {
+        guard let data = data else {return nil}
+        self.file = data
+        self.mimeType = type.preferredMIMEType ?? ""
+        self.fileName = fileName+".\(type.preferredFilenameExtension ?? "")"
     }
     
     init?(withImage image: UIImage?, fileName: String, mimeType: String) {
@@ -86,6 +99,14 @@ public extension AttachedFile {
             default:
                 return nil
         }
+    }
+    
+    @available(macOS 11.0, *)
+    init?(withData data: Data?, fileName: String, type: UTType = .png) {
+        guard let data = data else {return nil}
+        self.file = data
+        self.mimeType = type.preferredMIMEType ?? ""
+        self.fileName = fileName+".\(type.preferredFilenameExtension ?? "")"
     }
     
     init?(withImage image: NSImage?, fileName: String, mimeType: String) {
