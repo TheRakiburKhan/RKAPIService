@@ -29,18 +29,19 @@ import UniformTypeIdentifiers
 #endif
 
 public extension AttachedFile {
+    @available(macCatalyst 14.0, *)
     @available(iOS 14.0, watchOS 7.0, tvOS 14.0, *)
     init?(withImage image: UIImage?, compress: Double = 0.8, fileName: String, type: UTType = .png) {
         self.mimeType = type.preferredMIMEType ?? ""
         self.fileName = fileName+".\(type.preferredFilenameExtension ?? "")"
         
         switch type {
-            case .jpeg:
+            case .jpeg, .bmp, .svg:
                 if compress <= 1.0 {
                     guard let data = image?.jpegData(compressionQuality: compress) else { return nil }
                     self.file = data
                 } else {
-                    guard let data = image?.jpegData(compressionQuality: 0.8) else { return nil }
+                    guard let data = image?.jpegData(compressionQuality: 1.0) else { return nil }
                     self.file = data
                 }
                 
@@ -86,7 +87,7 @@ public extension AttachedFile {
         guard let cgImage = image?.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
         
         switch type {
-            case .jpeg:
+            case .jpeg, .bmp, .svg:
                 let imageRep = NSBitmapImageRep(cgImage: cgImage)
                 guard let jpegData = imageRep.representation(using: .jpeg, properties: [:]) else { return nil }
                 self.file = jpegData
