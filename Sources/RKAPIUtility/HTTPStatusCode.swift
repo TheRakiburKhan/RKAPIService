@@ -534,7 +534,11 @@ public enum HTTPStatusCode: LocalizedError {
                 }
                 
             case .custom(let customCode):
+#if os(Linux)
+                return "Generic message for custom HTTPStatusCode \(customCode)"
+#else
                 return HTTPURLResponse.localizedString(forStatusCode: customCode)
+#endif
         }
     }
     
@@ -742,7 +746,11 @@ public enum HTTPStatusCode: LocalizedError {
                 }
                 
             case .custom(let customCode):
+#if os(Linux)
+                return "Generic message for custom HTTPStatusCode \(customCode)"
+#else
                 return HTTPURLResponse.localizedString(forStatusCode: customCode)
+#endif
         }
     }
     
@@ -950,7 +958,11 @@ public enum HTTPStatusCode: LocalizedError {
                 }
                 
             case .custom(let customCode):
+#if os(Linux)
+                return "Generic message for custom HTTPStatusCode \(customCode)"
+#else
                 return HTTPURLResponse.localizedString(forStatusCode: customCode)
+#endif
         }
     }
     
@@ -1158,7 +1170,11 @@ public enum HTTPStatusCode: LocalizedError {
                 }
                 
             case .custom(let customCode):
+#if os(Linux)
+                return "Generic message for custom HTTPStatusCode \(customCode)"
+#else
                 return HTTPURLResponse.localizedString(forStatusCode: customCode)
+#endif
         }
     }
 }

@@ -26,9 +26,6 @@ public struct Attachment {
     }
 }
 
-#if canImport(UIKit)
-import UIKit
-
 extension Attachment {
     func generateAttachmentArray() -> [UploadAttachment] {
         var attachmets: [UploadAttachment] = []
@@ -79,4 +76,3 @@ extension Attachment {
         .init(data: item.file, forKey: key, fileName: item.fileName, type: item.mimeType)
     }
 }
-#endif

@@ -28,7 +28,7 @@ extension RKAPIService {
             (rawData, rawResponse) = try await session.data(for: request)
         }
         else {
-            (rawData, rawResponse) = try await previousVersionURLSession(request: request)
+            (rawData, rawResponse) = try await legacyDataTask(request: request)
         }
         
         guard let response = rawResponse as? HTTPURLResponse else {
@@ -208,6 +208,7 @@ public extension RKAPIService {
         - urlLink: Receives an `Optional<URL>` aka `URL?`
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
+        - decoder: `JSONDecoder` object to decode data
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is `URLRequest.CachePolicy.useProtocolCachePolicy
      
      - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
@@ -215,13 +216,14 @@ public extension RKAPIService {
     func fetchItems<D: Decodable>(urlLink: URL?,
                                   additionalHeader: [Header]? = nil,
                                   _ model: D.Type,
+                                  decoder: JSONDecoder = .init(),
                                   cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
         do {
             let reply = try await fetchItemsBase(urlLink: urlLink, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
             
             guard let rawData = reply.data else {throw reply.response}
             
-            let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+            let decodedData = try decoder.decode(model.self, from: rawData)
             
             return .success(NetworkResult(data: decodedData, response: reply.response))
         } catch {
@@ -235,18 +237,19 @@ public extension RKAPIService {
      - Parameters:
         - request: Receives an `URLRequest`
         - model: Generic Type `D` where `D` confirms to `Decodable`
+        - decoder: `JSONDecoder` object to decode data
      
      - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
      
      - Returns: Returns a  ``NetworkResult``
      */
-    func fetchItems<D: Decodable>(request: URLRequest, _ model: D.Type) async throws -> Result<NetworkResult<D>, Error> {
+    func fetchItems<D: Decodable>(request: URLRequest, _ model: D.Type, decoder: JSONDecoder = .init()) async throws -> Result<NetworkResult<D>, Error> {
         do {
             let reply = try await fetchItemsWithRequest(request: request)
             
             guard let rawData = reply.data else {throw reply.response}
             
-            let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+            let decodedData = try decoder.decode(model.self, from: rawData)
             
             return .success(NetworkResult(data: decodedData, response: reply.response))
         } catch {
@@ -319,6 +322,7 @@ public extension RKAPIService {
         - body: `Optional<Data>` aka `Data?` for sending to remote server.
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
+        - decoder: `JSONDecoder` object to decode data
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
      
      - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
@@ -328,13 +332,14 @@ public extension RKAPIService {
                                               body: Data? = nil,
                                               additionalHeader: [Header]? = nil,
                                               _ model: D.Type,
+                                              decoder: JSONDecoder = .init(),
                                               cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
         do {
             let reply = try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
             
             guard let rawData = reply.data else {throw reply.response}
             
-            let decodedData = try JSONDecoder().decode(model.self, from: rawData)
+            let decodedData = try decoder.decode(model.self, from: rawData)
             
             return .success(NetworkResult(data: decodedData, response: reply.response))
         } catch {
@@ -354,6 +359,7 @@ public extension RKAPIService {
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
         - model: Generic Type `D` where `D` confirms to `Decodable`.
+        - decoder: `JSONDecoder` object to decode data
      
      - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
      */
@@ -362,9 +368,10 @@ public extension RKAPIService {
                                                             body: E,
                                                             additionalHeader: [Header]? = nil,
                                                             _ model: D.Type,
+                                                            decoder: JSONDecoder = .init(),
                                                             cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
-        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, cachePolicy: cachePolicy)
+        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, decoder: decoder, cachePolicy: cachePolicy)
     }
     
     //MARK: fetchItemsByHTTPMethod [String: Any]
@@ -405,6 +412,7 @@ public extension RKAPIService {
         - body: `[String: Any]` aka `[String: Any]` for sending to remote server.
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
+        - decoder: `JSONDecoder` object to decode data
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
      
      - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
@@ -413,10 +421,12 @@ public extension RKAPIService {
                                               httpMethod: HTTPMethod,
                                               body: [String: Any],
                                               additionalHeader: [Header]? = nil,
-                                              _ model: D.Type, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
+                                              _ model: D.Type,
+                                              decoder: JSONDecoder = .init(),
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
         
-        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, cachePolicy: cachePolicy)
+        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, decoder: decoder, cachePolicy: cachePolicy)
     }
 }
 
@@ -473,6 +483,7 @@ public extension RKAPIService {
         - multipartAttachment: Receives an array``[Attachment]``
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
+        - decoder: `JSONDecoder` object to decode data
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
      
      - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
@@ -483,6 +494,7 @@ public extension RKAPIService {
                                               multipartAttachment: [Attachment],
                                               additionalHeader: [Header]? = nil,
                                               _ model: D.Type,
+                                              decoder: JSONDecoder = .init(),
                                               cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error>{
         let boundary = await RKAPIHelper.generateBoundary()
         
@@ -496,7 +508,7 @@ public extension RKAPIService {
         
         activeHeader.append(ContentType.formData(boundary: boundary))
         
-        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, cachePolicy: cachePolicy)
+        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, decoder: decoder, cachePolicy: cachePolicy)
     }
     
     /**
@@ -550,6 +562,7 @@ public extension RKAPIService {
         - multipartAttachment: Receives an array``[Attachment]``
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
+        - decoder: `JSONDecoder` object to decode data
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
      
      - Returns: Returns a  ``NetworkResult``
@@ -560,6 +573,7 @@ public extension RKAPIService {
                                                             multipartAttachment: [Attachment],
                                                             additionalHeader: [Header]? = nil,
                                                             _ model: D.Type,
+                                                            decoder: JSONDecoder = .init(),
                                                             cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error>{
         let boundary = await RKAPIHelper.generateBoundary()
         
@@ -573,6 +587,6 @@ public extension RKAPIService {
         
         activeHeader.append(ContentType.formData(boundary: boundary))
         
-        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, cachePolicy: cachePolicy)
+        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, decoder: decoder, cachePolicy: cachePolicy)
     }
 }
