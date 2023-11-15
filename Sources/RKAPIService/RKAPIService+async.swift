@@ -41,7 +41,52 @@ extension RKAPIService {
         return NetworkResult(data: rawData, response: status)
     }
     
-    //MARK: - Original fetchItems
+    func uploadItemsWithRequest(request: URLRequest, data: Data) async throws -> NetworkResult<Data> {
+        var rawData: Data?
+        var rawResponse: URLResponse?
+        
+        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
+            (rawData, rawResponse) = try await session.upload(for: request, from: data)
+        }
+        else {
+            (rawData, rawResponse) = try await legacyUploadTask(request: request, data: data)
+        }
+        
+        guard let response = rawResponse as? HTTPURLResponse else {
+            
+            throw URLError(.cannotParseResponse)
+        }
+        
+        let status = HTTPStatusCode(rawValue: response.statusCode)
+        
+        return NetworkResult(data: rawData, response: status)
+    }
+    
+    func uploadItemsWithFile(request: URLRequest, fileURL: URL) async throws -> NetworkResult<Data> {
+        var rawData: Data?
+        var rawResponse: URLResponse?
+        
+        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
+            (rawData, rawResponse) = try await session.upload(for: request, fromFile: fileURL)
+        }
+        else {
+            (rawData, rawResponse) = try await legacyUploadTask(request: request, fileURL: fileURL)
+        }
+        
+        guard let response = rawResponse as? HTTPURLResponse else {
+            
+            throw URLError(.cannotParseResponse)
+        }
+        
+        let status = HTTPStatusCode(rawValue: response.statusCode)
+        
+        return NetworkResult(data: rawData, response: status)
+    }
+}
+
+//MARK: - Original fetchItems
+@available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
+extension RKAPIService {
     /**
      Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
      
@@ -74,7 +119,6 @@ extension RKAPIService {
         return try await fetchItemsWithRequest(request: request)
     }
     
-    //MARK: - Original fetchItemsByHTTPMethod
     /**
      Fetch items with HTTP method.
      
