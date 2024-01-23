@@ -20,15 +20,15 @@ extension RKAPIService {
      
      - Returns: Returns a  ``NetworkResult``
      */
-    func fetchItemsWithRequest(request: URLRequest) async throws -> NetworkResult<Data> {
+    func fetchItemsWithRequest(for request: URLRequest, delegate: (URLSessionTaskDelegate)? = nil) async throws -> NetworkResult<Data> {
         var rawData: Data?
         var rawResponse: URLResponse?
         
         if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            (rawData, rawResponse) = try await session.data(for: request)
+            (rawData, rawResponse) = try await session.data(for: request, delegate: delegate)
         }
         else {
-            (rawData, rawResponse) = try await legacyDataTask(request: request)
+            (rawData, rawResponse) = try await legacyDataTask(request: request, delegate: delegate)
         }
         
         guard let response = rawResponse as? HTTPURLResponse else {
@@ -41,15 +41,15 @@ extension RKAPIService {
         return NetworkResult(data: rawData, response: status)
     }
     
-    func uploadItemsWithRequest(request: URLRequest, data: Data) async throws -> NetworkResult<Data> {
+    func uploadItemsWithRequest(for request: URLRequest, from bodyData: Data, delegate: (URLSessionTaskDelegate)? = nil) async throws -> NetworkResult<Data> {
         var rawData: Data?
         var rawResponse: URLResponse?
         
         if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            (rawData, rawResponse) = try await session.upload(for: request, from: data)
+            (rawData, rawResponse) = try await session.upload(for: request, from: bodyData, delegate: delegate)
         }
         else {
-            (rawData, rawResponse) = try await legacyUploadTask(request: request, data: data)
+            (rawData, rawResponse) = try await legacyUploadTask(for: request, from: bodyData, delegate: delegate)
         }
         
         guard let response = rawResponse as? HTTPURLResponse else {
@@ -62,15 +62,15 @@ extension RKAPIService {
         return NetworkResult(data: rawData, response: status)
     }
     
-    func uploadItemsWithFile(request: URLRequest, fileURL: URL) async throws -> NetworkResult<Data> {
+    func uploadItemsWithFile(for request: URLRequest, fromFile fileURL: URL, delegate: (URLSessionTaskDelegate)? = nil) async throws -> NetworkResult<Data> {
         var rawData: Data?
         var rawResponse: URLResponse?
         
         if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            (rawData, rawResponse) = try await session.upload(for: request, fromFile: fileURL)
+            (rawData, rawResponse) = try await session.upload(for: request, fromFile: fileURL, delegate: delegate)
         }
         else {
-            (rawData, rawResponse) = try await legacyUploadTask(request: request, fileURL: fileURL)
+            (rawData, rawResponse) = try await legacyUploadTask(for: request, fromFile: fileURL, delegate: delegate)
         }
         
         guard let response = rawResponse as? HTTPURLResponse else {
@@ -81,180 +81,6 @@ extension RKAPIService {
         let status = HTTPStatusCode(rawValue: response.statusCode)
         
         return NetworkResult(data: rawData, response: status)
-    }
-}
-
-//MARK: - Original fetchItems
-@available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
-extension RKAPIService {
-    /**
-     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
-     
-     - Parameters:
-        - urlLink: Receives an `Optional<URL>` aka `URL?`
-        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
-        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is `URLRequest.CachePolicy.useProtocolCachePolicy`
-     
-     - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
-     
-     - Returns: Returns a  ``NetworkResult``
-     */
-    func fetchItemsBase(urlLink: URL?, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil) async throws -> NetworkResult<Data> {
-        guard let url = urlLink else {
-            throw URLError(.badURL)
-        }
-        
-        var request = URLRequest(url: url)
-        
-        if let cachePolicy = cachePolicy {
-            request.cachePolicy = cachePolicy
-        }
-        
-        if let headers = additionalHeader, !headers.isEmpty {
-            for header in headers {
-                request.setValue(header.value, forHTTPHeaderField: header.key)
-            }
-        }
-        
-        return try await fetchItemsWithRequest(request: request)
-    }
-    
-    /**
-     Fetch items with HTTP method.
-     
-     Fetch items with HTTP method with body parameter. Uses swift concurrency.
-     
-     - Parameters:
-        - urlLink: Receives an `Optional<URL>` aka `URL?`
-        - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
-        - body: `Optional<Data>` aka `Data?` for sending to remote server.
-        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
-        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
-     
-     - Throws: An `URLError` is thrown if urlLink is nil or not a valied `URL` or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
-     
-     - Returns: Returns a  ``NetworkResult``
-     */
-    func fetchItemsByHTTPMethodBase(urlLink: URL?, httpMethod: HTTPMethod, body: Data? = nil, additionalHeader: [Header]? = nil, cachePolicy: URLRequest.CachePolicy? = nil) async throws -> NetworkResult<Data> {
-        guard let url = urlLink else {
-            throw URLError(.badURL)
-        }
-        
-        var request = URLRequest(url: url)
-        
-        request.httpMethod = httpMethod.rawValue
-        
-        if let cachePolicy = cachePolicy {
-            request.cachePolicy = cachePolicy
-        }
-        
-        if let valiedBody = body {
-            request.httpBody = valiedBody
-        }
-        
-        if let headers = additionalHeader, !headers.isEmpty {
-            for header in headers {
-                request.setValue(header.value, forHTTPHeaderField: header.key)
-            }
-        }
-        
-        return try await fetchItemsWithRequest(request: request)
-    }
-}
-
-//MARK: - Public Methods
-
-//MARK: - Get Requests Only
-@available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
-public extension RKAPIService {
-    /**
-     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
-     
-     - Parameters:
-        - request: Receives an `URLRequest`
-     
-     - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
-     
-     - Returns: Returns a  ``NetworkResult``
-     */
-    func fetchItems(request: URLRequest) async throws -> NetworkResult<Data> {
-        try await fetchItemsWithRequest(request: request)
-    }
-    
-    /**
-     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
-     
-     - Parameters:
-        - urlLink: Receives an `Optional<URL>` aka `URL?`
-        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
-        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is `URLRequest.CachePolicy.useProtocolCachePolicy`
-     
-     - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
-     
-     - Returns: Returns a  ``NetworkResult``
-     */
-    func fetchItems(urlLink: URL?,
-                    additionalHeader: [Header]? = nil,
-                    cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
-        try await fetchItemsBase(urlLink: urlLink, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
-    }
-    
-    /**
-     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
-     
-     Fetch items with HTTP Get method without any body parameter. And decodes the data with provided `Decodable` model. It's extreamly handy if anyone just  want to provide a data model and url and get back the decoded data. Uses async/await concurrency of iOS 13.
-     
-     - Parameters:
-        - urlLink: Receives an `Optional<URL>` aka `URL?`
-        - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
-        - model: Generic Type `D` where `D` confirms to `Decodable`
-        - decoder: `JSONDecoder` object to decode data
-        - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is `URLRequest.CachePolicy.useProtocolCachePolicy
-     
-     - Returns: Returns a  `Result<Success, Failure>` type where `Success` is  ``NetworkResult`` and failure is `Error`
-     */
-    func fetchItems<D: Decodable>(urlLink: URL?,
-                                  additionalHeader: [Header]? = nil,
-                                  _ model: D.Type,
-                                  decoder: JSONDecoder = .init(),
-                                  cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
-        do {
-            let reply = try await fetchItemsBase(urlLink: urlLink, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
-            
-            guard let rawData = reply.data else {throw reply.response}
-            
-            let decodedData = try decoder.decode(model.self, from: rawData)
-            
-            return .success(NetworkResult(data: decodedData, response: reply.response))
-        } catch {
-            return .failure(error)
-        }
-    }
-    
-    /**
-     Fetch items with HTTP Get method without any body parameter. Uses swift concurrency.
-     
-     - Parameters:
-        - request: Receives an `URLRequest`
-        - model: Generic Type `D` where `D` confirms to `Decodable`
-        - decoder: `JSONDecoder` object to decode data
-     
-     - Throws: An `URLError` is thrown if urlLink is nil or not a valied URL or server does not provide any response. Also ``HTTPStatusCode`` Error (Custom error) can be thrown if server status code is anything but 200...299
-     
-     - Returns: Returns a  ``NetworkResult``
-     */
-    func fetchItems<D: Decodable>(request: URLRequest, _ model: D.Type, decoder: JSONDecoder = .init()) async throws -> Result<NetworkResult<D>, Error> {
-        do {
-            let reply = try await fetchItemsWithRequest(request: request)
-            
-            guard let rawData = reply.data else {throw reply.response}
-            
-            let decodedData = try decoder.decode(model.self, from: rawData)
-            
-            return .success(NetworkResult(data: decodedData, response: reply.response))
-        } catch {
-            return .failure(error)
-        }
     }
 }
 
@@ -281,9 +107,10 @@ public extension RKAPIService {
                                 httpMethod: HTTPMethod,
                                 body: Data? = nil,
                                 additionalHeader: [Header]? = nil,
-                                cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
+                                cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                delegate: (URLSessionTaskDelegate)? = nil) async throws -> NetworkResult<Data> {
         
-        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader)
+        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader, delegate: delegate)
     }
     
     /**
@@ -306,9 +133,10 @@ public extension RKAPIService {
                                               httpMethod: HTTPMethod,
                                               body: D,
                                               additionalHeader: [Header]? = nil,
-                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                              delegate: (URLSessionTaskDelegate)? = nil) async throws -> NetworkResult<Data> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
-        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
+        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy, delegate: delegate)
     }
     
     /**
@@ -333,9 +161,10 @@ public extension RKAPIService {
                                               additionalHeader: [Header]? = nil,
                                               _ model: D.Type,
                                               decoder: JSONDecoder = .init(),
-                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                              delegate: (URLSessionTaskDelegate)? = nil) async -> Result<NetworkResult<D>, Error> {
         do {
-            let reply = try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
+            let reply = try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader, cachePolicy: cachePolicy, delegate: delegate)
             
             guard let rawData = reply.data else {throw reply.response}
             
@@ -369,9 +198,10 @@ public extension RKAPIService {
                                                             additionalHeader: [Header]? = nil,
                                                             _ model: D.Type,
                                                             decoder: JSONDecoder = .init(),
-                                                            cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
+                                                            cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                                            delegate: (URLSessionTaskDelegate)? = nil) async -> Result<NetworkResult<D>, Error> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
-        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, decoder: decoder, cachePolicy: cachePolicy)
+        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, decoder: decoder, cachePolicy: cachePolicy, delegate: delegate)
     }
     
     //MARK: fetchItemsByHTTPMethod [String: Any]
@@ -395,10 +225,11 @@ public extension RKAPIService {
                                 httpMethod: HTTPMethod,
                                 body: [String: Any],
                                 additionalHeader: [Header]? = nil,
-                                cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data> {
+                                cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                delegate: (URLSessionTaskDelegate)? = nil) async throws -> NetworkResult<Data> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
         
-        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
+        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy, delegate: delegate)
     }
     
     /**
@@ -423,10 +254,11 @@ public extension RKAPIService {
                                               additionalHeader: [Header]? = nil,
                                               _ model: D.Type,
                                               decoder: JSONDecoder = .init(),
-                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error> {
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                              delegate: (URLSessionTaskDelegate)? = nil) async -> Result<NetworkResult<D>, Error> {
         let uploadData = await RKAPIHelper.generateRequestBody(body)
         
-        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, decoder: decoder, cachePolicy: cachePolicy)
+        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, decoder: decoder, cachePolicy: cachePolicy, delegate: delegate)
     }
 }
 
@@ -455,7 +287,8 @@ public extension RKAPIService {
                                 body: [String: Any]? = nil,
                                 multipartAttachment: [Attachment],
                                 additionalHeader: [Header]? = nil,
-                                cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data>{
+                                cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                delegate: (URLSessionTaskDelegate)? = nil) async throws -> NetworkResult<Data>{
         let boundary = await RKAPIHelper.generateBoundary()
         
         let data = await RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
@@ -468,7 +301,7 @@ public extension RKAPIService {
         
         activeHeader.append(ContentType.formData(boundary: boundary))
         
-        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: [ContentType.formData(boundary: boundary)], cachePolicy: cachePolicy)
+        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: [ContentType.formData(boundary: boundary)], cachePolicy: cachePolicy, delegate: delegate)
     }
     
     /**
@@ -495,7 +328,8 @@ public extension RKAPIService {
                                               additionalHeader: [Header]? = nil,
                                               _ model: D.Type,
                                               decoder: JSONDecoder = .init(),
-                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error>{
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                              delegate: (URLSessionTaskDelegate)? = nil) async -> Result<NetworkResult<D>, Error>{
         let boundary = await RKAPIHelper.generateBoundary()
         
         let data = await RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
@@ -508,7 +342,7 @@ public extension RKAPIService {
         
         activeHeader.append(ContentType.formData(boundary: boundary))
         
-        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, decoder: decoder, cachePolicy: cachePolicy)
+        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, decoder: decoder, cachePolicy: cachePolicy, delegate: delegate)
     }
     
     /**
@@ -533,7 +367,8 @@ public extension RKAPIService {
                                               body: E,
                                               multipartAttachment: [Attachment],
                                               additionalHeader: [Header]? = nil,
-                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async throws -> NetworkResult<Data>{
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                              delegate: (URLSessionTaskDelegate)? = nil) async throws -> NetworkResult<Data>{
         let boundary = await RKAPIHelper.generateBoundary()
         
         let data = await RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
@@ -546,7 +381,7 @@ public extension RKAPIService {
         
         activeHeader.append(ContentType.formData(boundary: boundary))
         
-        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, cachePolicy: cachePolicy)
+        return try await fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, cachePolicy: cachePolicy, delegate: delegate)
         
     }
     
@@ -574,7 +409,8 @@ public extension RKAPIService {
                                                             additionalHeader: [Header]? = nil,
                                                             _ model: D.Type,
                                                             decoder: JSONDecoder = .init(),
-                                                            cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) async -> Result<NetworkResult<D>, Error>{
+                                                            cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
+                                                            delegate: (URLSessionTaskDelegate)? = nil) async -> Result<NetworkResult<D>, Error>{
         let boundary = await RKAPIHelper.generateBoundary()
         
         let data = await RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
@@ -587,6 +423,12 @@ public extension RKAPIService {
         
         activeHeader.append(ContentType.formData(boundary: boundary))
         
-        return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, decoder: decoder, cachePolicy: cachePolicy)
+        if multipartAttachment.isEmpty {
+            return await fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, decoder: decoder, cachePolicy: cachePolicy, delegate: delegate)
+        } else {
+            #error("Need to implement upload task")
+//            return await uploadItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, delegate: delegate)
+//            return await uploadItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: data, additionalHeader: activeHeader, model.self, decoder: decoder, cachePolicy: cachePolicy, delegate: delegate)
+        }
     }
 }

@@ -69,11 +69,13 @@ public class RKAPIService {
         
         session = newSession
     }
-    
-    @available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
-    internal func previousVersionURLSession(request: URLRequest) async throws -> (Data, URLResponse) {
+}
+
+@available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
+extension RKAPIService {
+    internal func legacyDataTask(request: URLRequest, delegate: (URLSessionTaskDelegate)? = nil) async throws -> (Data, URLResponse) {
         try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
-            session.dataTask(with: request) { data, response, error in
+            let task = session.dataTask(with: request) { data, response, error in
                 if let error = error {
                     continuation.resume(throwing: error)
                 } else {
@@ -82,12 +84,18 @@ public class RKAPIService {
                     }
                 }
             }
+            
+            if #available(macOS 12.0, *) {
+                task.delegate = delegate
+            } else {
+                // Fallback on earlier versions
+            }
         })
     }
     
-    internal func legacyUploadTask(request: URLRequest, data: Data) async throws -> (Data, URLResponse) {
+    internal func legacyUploadTask(for request: URLRequest, from bodyData: Data, delegate: (URLSessionTaskDelegate)? = nil) async throws -> (Data, URLResponse) {
         try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
-            session.uploadTask(with: request, from: data) { data, response, error in
+            let task = session.uploadTask(with: request, from: bodyData) { data, response, error in
                 if let error = error {
                     continuation.resume(throwing: error)
                 } else {
@@ -96,12 +104,18 @@ public class RKAPIService {
                     }
                 }
             }
+            
+            if #available(macOS 12.0, *) {
+                task.delegate = delegate
+            } else {
+                // Fallback on earlier versions
+            }
         })
     }
     
-    internal func legacyUploadTask(request: URLRequest, fileURL: URL) async throws -> (Data, URLResponse) {
+    internal func legacyUploadTask(for request: URLRequest, fromFile fileURL: URL, delegate: (URLSessionTaskDelegate)? = nil) async throws -> (Data, URLResponse) {
         try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
-            session.uploadTask(with: request, fromFile: fileURL) { data, response, error in
+            let task = session.uploadTask(with: request, fromFile: fileURL) { data, response, error in
                 if let error = error {
                     continuation.resume(throwing: error)
                 } else {
@@ -110,21 +124,11 @@ public class RKAPIService {
                     }
                 }
             }
-        })
-    }
-    
-    @available(iOS 13.0, macOS 10.15.0, watchOS 6.0, tvOS 13.0, *)
-    internal func legacyUploadTask(request: URLRequest, data: Data) async throws -> (Data, URLResponse) {
-        try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
-            session.uploadTask(with: request, from: data) { data, response, error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                }
-                else {
-                    if let data = data, let response = response {
-                        continuation.resume(with: .success((data, response)))
-                    }
-                }
+            
+            if #available(macOS 12.0, *) {
+                task.delegate = delegate
+            } else {
+                // Fallback on earlier versions
             }
         })
     }
