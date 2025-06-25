@@ -10,7 +10,8 @@ import Foundation
 /// This is a list of Hypertext Transfer Protocol (HTTP) response status codes.
 /// It includes codes from IETF internet standards, other IETF RFCs, other specifications, and some additional commonly used codes.
 /// The first digit of the status code specifies one of five classes of response; an HTTP client must recognise these five classes at a minimum.
-public enum HTTPStatusCode: LocalizedError {
+@frozen
+public enum HTTPStatusCode: LocalizedError, Sendable {
     
     case standard(statusCode: StandardCode)
     case custom(customCode: Int)
@@ -25,7 +26,7 @@ public enum HTTPStatusCode: LocalizedError {
     }
     
     /// The response class representation of status codes, these get grouped by their first digit.
-    @frozen public enum ResponseType {
+    @frozen public enum ResponseType: Sendable {
         
         /// - informational: This class of status code indicates a provisional response, consisting only of the Status-Line and optional headers, and is terminated by an empty line.
         case informational
@@ -46,7 +47,7 @@ public enum HTTPStatusCode: LocalizedError {
         case undefined
     }
     
-    public enum StandardCode: Int {
+    public enum StandardCode: Int, Sendable {
         //
         // Informational - 1xx
         //

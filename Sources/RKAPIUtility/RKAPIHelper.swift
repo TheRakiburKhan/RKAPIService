@@ -68,11 +68,12 @@ public struct RKAPIHelper {
      
      - Parameters:
         - data: Receives generic type `T` which confirms to `Encodable`
+        - encoder: `JSONEncoder` to encode data.
      
      - Returns: Returns an `Optional<Data>` aka `Data?`
      */
-    public static func generateRequestBody<T: Encodable>(_ data: T) -> Data? {
-        return try? JSONEncoder().encode(data)
+    public static func generateRequestBody<T: Encodable>(_ data: T, encoder: JSONEncoder) -> Data? {
+        return try? encoder.encode(data)
     }
     
     /**
@@ -174,7 +175,7 @@ public struct RKAPIHelper {
         return body
     }
     
-    @_spi(RKAH) public static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [Attachment]?, boundary: String) -> Data {
+    @_spi(RKAH) public static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, encoder: JSONEncoder, media: [Attachment]?, boundary: String) -> Data {
         let lineBreak = "\r\n"
         var body = Data()
         
@@ -183,7 +184,7 @@ public struct RKAPIHelper {
         }
         
         do {
-            let jsonData = try JSONEncoder().encode(type)
+            let jsonData = try encoder.encode(type)
             
             let params = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
             
@@ -248,12 +249,13 @@ public extension RKAPIHelper {
      
      - Parameters:
         - data: Receives generic type `T` which confirms to `Encodable`
+        - encoder: `JSONEncoder` to encode data.
      
      - Returns: Returns an `Optional<Data>` aka `Data?`
      */
-    static func generateRequestBody<D: Encodable>(_ data: D) async -> Data? {
+    static func generateRequestBody<D: Encodable>(_ data: D, encoder: JSONEncoder) async -> Data? {
         do {
-            let reply = try JSONEncoder().encode(data)
+            let reply = try encoder.encode(data)
             
             return reply
         } catch {
@@ -271,7 +273,7 @@ public extension RKAPIHelper {
      */
     static func generateRequestBody(_  data: [String: Any]?) async -> Data? {
         guard let data = data else {return nil}
-
+        
         return try? JSONSerialization.data(withJSONObject: data, options: [])
     }
     
@@ -318,7 +320,7 @@ public extension RKAPIHelper {
         return body
     }
     
-    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [UploadAttachment]?, boundary: String) async -> Data {
+    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, encoder: JSONEncoder, media: [UploadAttachment]?, boundary: String) async -> Data {
         let lineBreak = "\r\n"
         var body = Data()
         
@@ -327,7 +329,7 @@ public extension RKAPIHelper {
         }
         
         do {
-            let jsonData = try JSONEncoder().encode(type)
+            let jsonData = try encoder.encode(type)
             
             let params = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
             
@@ -415,7 +417,7 @@ public extension RKAPIHelper {
         return body
     }
     
-    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, media: [Attachment]?, boundary: String) async -> Data {
+    @_spi(RKAH) static func createDataBody<E: Encodable>(data: Data? = nil, withParameters type: E, encoder: JSONEncoder, media: [Attachment]?, boundary: String) async -> Data {
         let lineBreak = "\r\n"
         var body = Data()
         
@@ -424,7 +426,7 @@ public extension RKAPIHelper {
         }
         
         do {
-            let jsonData = try JSONEncoder().encode(type)
+            let jsonData = try encoder.encode(type)
             
             let params = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
             

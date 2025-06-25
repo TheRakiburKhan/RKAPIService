@@ -108,7 +108,7 @@ extension RKAPIServiceCombine {
                 
                 let status = HTTPStatusCode(rawValue: response.statusCode)
                 
-                return NetworkResult(data: output.data, response: status)
+                return NetworkResult(data: output.data, response: response, statusCode: status)
             }
             .eraseToAnyPublisher()
     }
@@ -225,11 +225,11 @@ public extension RKAPIServiceCombine {
     func fetchItems<D: Decodable>(urlLink: URL?, additionalHeader: [Header]? = nil, _ model: D.Type, decoder: JSONDecoder = .init(), cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<D>, Error> {
         return fetchItemsBase(urlLink: urlLink, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
             .tryMap{ reply in
-                guard let rawData = reply.data else {throw reply.response}
+                guard let rawData = reply.data else {throw reply.statusCode}
                 
                 let decodedData = try decoder.decode(model.self, from: rawData)
                 
-                return NetworkResult(data: decodedData, response: reply.response)
+                return NetworkResult(data: decodedData, response: reply.response, statusCode: reply.statusCode)
             }
             .mapError{ error in
                 
@@ -286,11 +286,11 @@ public extension RKAPIServiceCombine {
                                               cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<D>, Error> {
         return fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: body, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
             .tryMap{ reply in
-                guard let rawData = reply.data else {throw reply.response}
+                guard let rawData = reply.data else {throw reply.statusCode}
                 
                 let decodedData = try decoder.decode(model.self, from: rawData)
                 
-                return NetworkResult(data: decodedData, response: reply.response)
+                return NetworkResult(data: decodedData, response: reply.response, statusCode: reply.statusCode)
             }
             .mapError{ error in
                 
@@ -308,17 +308,19 @@ public extension RKAPIServiceCombine {
         - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
         - body: Generic Type `E` where `E` confirms to `Encodable`.
+        - encoder: `JSONEncoder` object to decode data
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
      
      - Returns: Returns a  `AnyPublisher<Success, Failure>` where Success is ``NetworkResult`` Failure is `Error`
      */
     func fetchItemsByHTTPMethod<E: Encodable>(urlLink: URL?,
-                                                     httpMethod: HTTPMethod,
-                                                     body: E,
-                                                     additionalHeader: [Header]? = nil,
-                                                     cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<Data>, Error> {
-        let uploadData = RKAPIHelper.generateRequestBody(body)
+                                              httpMethod: HTTPMethod,
+                                              body: E,
+                                              encoder: JSONEncoder = .init(),
+                                              additionalHeader: [Header]? = nil,
+                                              cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<Data>, Error> {
+        let uploadData = RKAPIHelper.generateRequestBody(body, encoder: encoder)
         
         return fetchItemsByHTTPMethodBase(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, cachePolicy: cachePolicy)
     }
@@ -332,6 +334,7 @@ public extension RKAPIServiceCombine {
         - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
         - body: Generic Type `E` where `E` confirms to `Encodable`.
+        - encoder: `JSONEncoder` object to decode data
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
         - decoder: `JSONDecoder` object to decode data
@@ -342,11 +345,12 @@ public extension RKAPIServiceCombine {
     func fetchItemsByHTTPMethod<D: Decodable, E: Encodable>(urlLink: URL?,
                                                             httpMethod: HTTPMethod,
                                                             body: E,
+                                                            encoder: JSONEncoder = .init(),
                                                             additionalHeader: [Header]? = nil,
                                                             _ model: D.Type,
                                                             decoder: JSONDecoder = .init(),
                                                             cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<D>, Error> {
-        let uploadData = RKAPIHelper.generateRequestBody(body)
+        let uploadData = RKAPIHelper.generateRequestBody(body, encoder: encoder)
         
         return fetchItemsByHTTPMethod(urlLink: urlLink, httpMethod: httpMethod, body: uploadData, additionalHeader: additionalHeader, D.self, decoder: decoder, cachePolicy: cachePolicy)
     }
@@ -494,6 +498,7 @@ public extension RKAPIServiceCombine {
         - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
         - body: `Optional<Data>` aka `Data?` for sending to remote server.
+        - encoder: `JSONEncoder` object to decode data
         - multipartAttachment: Receives an array``[Attachment]``
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - cachePolicy: Receives `URLRequest.CachePolicy`.  Default is ``URLRequest.CachePolicy.useProtocolCachePolicy``. Cache only works on ``HTTPMethod.get``
@@ -503,12 +508,13 @@ public extension RKAPIServiceCombine {
     func fetchItemsByHTTPMethod<E: Encodable>(urlLink: URL?,
                                               httpMethod: HTTPMethod,
                                               body: E,
+                                              encoder: JSONEncoder = .init(),
                                               multipartAttachment: [Attachment],
                                               additionalHeader: [Header]? = nil,
                                               cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<Data>, Error> {
         let boundary = RKAPIHelper.generateBoundary()
         
-        let data = RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
+        let data = RKAPIHelper.createDataBody(withParameters: body, encoder: encoder, media: multipartAttachment, boundary: boundary)
         
         var activeHeader: [Header] = []
         
@@ -531,6 +537,7 @@ public extension RKAPIServiceCombine {
         - urlLink: Receives an `Optional<URL>` aka `URL?`
         - httpMethod: ``HTTPMethod`` enum value to send data with that specific method.
         - body: `Optional<Data>` aka `Data?` for sending to remote server.
+        - encoder: `JSONEncoder` object to decode data
         - multipartAttachment: Receives an array``[Attachment]``
         - additionalHeader: Receives an `Optional<Array<Header>>` aka [``Header``]?
         - model: Generic Type `D` where `D` confirms to `Decodable`
@@ -542,6 +549,7 @@ public extension RKAPIServiceCombine {
     func fetchItemsByHTTPMethod<D: Decodable, E: Encodable>(urlLink: URL?,
                                                             httpMethod: HTTPMethod,
                                                             body: E,
+                                                            encoder: JSONEncoder = .init(),
                                                             multipartAttachment: [Attachment],
                                                             additionalHeader: [Header]? = nil,
                                                             _ model: D.Type,
@@ -549,7 +557,7 @@ public extension RKAPIServiceCombine {
                                                             cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> AnyPublisher<NetworkResult<D>, Error> {
         let boundary = RKAPIHelper.generateBoundary()
         
-        let data = RKAPIHelper.createDataBody(withParameters: body, media: multipartAttachment, boundary: boundary)
+        let data = RKAPIHelper.createDataBody(withParameters: body, encoder: encoder, media: multipartAttachment, boundary: boundary)
         
         var activeHeader: [Header] = []
         

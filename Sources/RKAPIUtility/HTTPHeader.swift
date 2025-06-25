@@ -7,7 +7,7 @@
 import Foundation
 
 ///HTTPHeader for URLRequest
-public struct HTTPHeader: Header {
+public struct HTTPHeader: Header, Sendable {
     ///HTTPHeader key
     public let key: String
     
@@ -29,7 +29,7 @@ public struct HTTPHeader: Header {
     var value: String {get}
 }
 
-public enum Authorization: Header {
+public enum Authorization: Header, Sendable {
     case bearerToken(token: String)
     
     public var key: String {
@@ -48,7 +48,7 @@ public enum Authorization: Header {
     }
 }
 
-public enum ContentType: Header {
+public enum ContentType: Header, Sendable {
     case urlEncoded
     case rawJSON
     case formData(boundary: String)
