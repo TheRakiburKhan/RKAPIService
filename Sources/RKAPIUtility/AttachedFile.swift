@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct AttachedFile {
+public struct AttachedFile: Sendable {
     public let file: Data?
     
     public let fileName: String
@@ -103,7 +103,7 @@ public extension AttachedFile {
     }
     
     @available(macOS 11.0, *)
-    init?(withData data: Data?, fileName: String, type: UTType = .png) {
+    init?(withData data: Data?, fileName: String, type: UTType) {
         guard let data = data else {return nil}
         self.file = data
         self.mimeType = type.preferredMIMEType ?? ""

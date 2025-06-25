@@ -6,7 +6,7 @@
 
 import Foundation
 
-public struct Attachment {
+public struct Attachment: Sendable {
     public let key: String
     public let fileArray: [AttachedFile]
     public let fileItem: AttachedFile?
